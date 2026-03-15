@@ -1,0 +1,318 @@
+<div class="space-y-8">
+  <!-- Hero Section with Search -->
+  <div class="relative overflow-hidden rounded-2xl p-8 text-center" 
+       style="background: linear-gradient(135deg, var(--color-primary) 0%, color-mix(in srgb, var(--color-primary) 70%, black) 100%)">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 opacity-10">
+      <div class="absolute left-1/4 top-1/4 h-64 w-64 rounded-full bg-white blur-3xl"></div>
+      <div class="absolute right-1/4 bottom-1/4 h-48 w-48 rounded-full bg-white blur-3xl"></div>
+    </div>
+    
+    <div class="relative">
+      <h1 class="text-3xl font-bold text-white md:text-4xl">How can we help you?</h1>
+      <p class="mx-auto mt-3 max-w-lg text-white/80">
+        Search our knowledge base or browse categories below
+      </p>
+      
+      <!-- Search Bar -->
+      <div class="mx-auto mt-6 max-w-2xl">
+        <div class="relative">
+          <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-lg text-gray-400"></i>
+          <input
+            type="text"
+            [value]="searchQuery()"
+            (input)="onSearch($event)"
+            placeholder="Search for articles, guides, and more..."
+            class="w-full rounded-xl border-0 bg-white py-4 pl-12 pr-12 text-gray-900 shadow-xl transition-shadow placeholder:text-gray-400 focus:ring-2 focus:ring-white/50"
+          />
+          @if (searchQuery()) {
+            <button
+              (click)="clearSearch()"
+              class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          }
+        </div>
+
+        <!-- Admin: New Article Button -->
+        @if (isAdmin()) {
+          <div class="mt-4">
+            <button
+              (click)="openNewArticleDialog()"
+              class="inline-flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+            >
+              <i class="pi pi-plus"></i>
+              New Article
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Results -->
+  @if (isSearching()) {
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-(--text-primary)">
+          Search results for "{{ searchQuery() }}"
+        </h2>
+        <span class="text-sm text-(--text-secondary)">
+          {{ searchResults().length }} {{ searchResults().length === 1 ? 'result' : 'results' }}
+        </span>
+      </div>
+
+      @if (searchResults().length === 0) {
+        <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-12 text-center">
+          <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-(--bg-elevated)">
+            <i class="pi pi-search text-2xl text-(--text-muted)"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-(--text-primary)">No results found</h3>
+          <p class="mt-2 text-(--text-secondary)">
+            Try different keywords or browse our categories below
+          </p>
+        </div>
+      } @else {
+        <div class="space-y-3">
+          @for (article of searchResults(); track article.id) {
+            <button
+              (click)="openArticle(article)"
+              class="group w-full rounded-xl border border-(--border-default) bg-(--bg-surface) p-5 text-left transition-all hover:border-(--color-primary) hover:shadow-md"
+            >
+              <div class="flex items-start gap-4">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-(--bg-elevated)">
+                  <i class="pi pi-file-edit text-(--text-secondary)"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    @if (article.category) {
+                      <span 
+                        class="rounded px-2 py-0.5 text-xs font-medium text-white"
+                        [style.background]="article.category.color"
+                      >
+                        {{ article.category.name }}
+                      </span>
+                    }
+                  </div>
+                  <h3 class="mt-1 font-semibold text-(--text-primary) group-hover:text-(--color-primary)">
+                    {{ article.title }}
+                  </h3>
+                  <p class="mt-1 line-clamp-2 text-sm text-(--text-secondary)">
+                    {{ article.excerpt }}
+                  </p>
+                </div>
+                <i class="pi pi-arrow-right shrink-0 text-(--text-muted) opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100"></i>
+              </div>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Categories Grid -->
+    <div>
+      <div class="mb-6 flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-(--text-primary)">Browse by Category</h2>
+        @if (selectedCategory()) {
+          <button
+            (click)="selectCategory(null)"
+            class="flex items-center gap-1 text-sm font-medium transition-colors hover:opacity-80"
+            style="color: var(--color-primary)"
+          >
+            <i class="pi pi-times text-xs"></i>
+            Clear filter
+          </button>
+        }
+      </div>
+
+      @if (isLoading()) {
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+            <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+              <p-skeleton width="3rem" height="3rem" styleClass="mb-4" />
+              <p-skeleton width="60%" height="1.5rem" styleClass="mb-2" />
+              <p-skeleton width="100%" height="1rem" />
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          @for (category of categories(); track category.id) {
+            <button
+              (click)="selectCategory(category.slug)"
+              class="group rounded-2xl border-2 p-6 text-left transition-all"
+              [class]="selectedCategory() === category.slug 
+                ? 'border-(--color-primary) bg-[color-mix(in_srgb,var(--color-primary)_5%,transparent)]' 
+                : 'border-(--border-default) bg-(--bg-surface) hover:border-(--border-default) hover:shadow-md'"
+            >
+              <div 
+                class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl text-white"
+                [style.background]="category.color"
+              >
+                <i [class]="category.icon" class="text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-(--text-primary)">{{ category.name }}</h3>
+              <p class="mt-1 text-sm text-(--text-secondary)">{{ category.description }}</p>
+              <div class="mt-3 flex items-center gap-1 text-sm text-(--text-muted)">
+                <i class="pi pi-file-edit text-xs"></i>
+                {{ category.articleCount }} articles
+              </div>
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Articles List -->
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+      <!-- Main Articles -->
+      <div class="space-y-4 lg:col-span-2">
+        <h2 class="text-xl font-semibold text-(--text-primary)">
+          @if (selectedCategoryName()) {
+            {{ selectedCategoryName() }} Articles
+          } @else {
+            All Articles
+          }
+        </h2>
+
+        @if (isLoading()) {
+          @for (i of [1, 2, 3, 4]; track i) {
+            <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-5">
+              <p-skeleton width="30%" height="1rem" styleClass="mb-3" />
+              <p-skeleton width="80%" height="1.25rem" styleClass="mb-2" />
+              <p-skeleton width="100%" height="0.875rem" />
+            </div>
+          }
+        } @else if (filteredArticles().length === 0) {
+          <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-8 text-center">
+            <i class="pi pi-folder-open mb-3 text-4xl text-(--text-muted)"></i>
+            <p class="text-(--text-secondary)">No articles in this category yet</p>
+          </div>
+        } @else {
+          @for (article of filteredArticles(); track article.id) {
+            <button
+              (click)="openArticle(article)"
+              class="group w-full rounded-xl border border-(--border-default) bg-(--bg-surface) p-5 text-left transition-all hover:border-(--color-primary) hover:shadow-md"
+            >
+              <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0 flex-1">
+                  <div class="mb-2 flex flex-wrap items-center gap-2">
+                    @if (article.category) {
+                      <span 
+                        class="rounded px-2 py-0.5 text-xs font-medium text-white"
+                        [style.background]="article.category.color"
+                      >
+                        {{ article.category.name }}
+                      </span>
+                    }
+                    <span class="text-xs text-(--text-muted)">
+                      Updated {{ formatDate(article.updatedAt) }}
+                    </span>
+                  </div>
+                  <h3 class="font-semibold text-(--text-primary) group-hover:text-(--color-primary)">
+                    {{ article.title }}
+                  </h3>
+                  <p class="mt-1 line-clamp-2 text-sm text-(--text-secondary)">
+                    {{ article.excerpt }}
+                  </p>
+                  <div class="mt-3 flex items-center gap-4 text-xs text-(--text-muted)">
+                    <span class="flex items-center gap-1">
+                      <i class="pi pi-eye"></i>
+                      {{ formatViews(article.views) }} views
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <i class="pi pi-thumbs-up"></i>
+                      {{ article.helpful }} found helpful
+                    </span>
+                  </div>
+                </div>
+                <i class="pi pi-arrow-right shrink-0 text-(--text-muted) opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100"></i>
+              </div>
+            </button>
+          }
+        }
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-6">
+        <!-- Popular Articles -->
+        <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+          <h3 class="mb-4 flex items-center gap-2 font-semibold text-(--text-primary)">
+            <i class="pi pi-star-fill text-amber-500"></i>
+            Popular Articles
+          </h3>
+
+          @if (isLoading()) {
+            @for (i of [1, 2, 3, 4, 5]; track i) {
+              <div class="border-b border-(--border-default) py-3 last:border-0">
+                <p-skeleton width="90%" height="1rem" styleClass="mb-1" />
+                <p-skeleton width="40%" height="0.75rem" />
+              </div>
+            }
+          } @else {
+            <div class="space-y-1">
+              @for (article of popularArticles(); track article.id; let i = $index) {
+                <button
+                  (click)="openArticle(article)"
+                  class="group flex w-full items-start gap-3 rounded-lg p-2 text-left transition-colors hover:bg-(--hover-bg)"
+                >
+                  <span 
+                    class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                    [style.background]="i < 3 ? 'var(--color-primary)' : 'var(--text-muted)'"
+                  >
+                    {{ i + 1 }}
+                  </span>
+                  <div class="min-w-0 flex-1">
+                    <p class="line-clamp-2 text-sm font-medium text-(--text-primary) group-hover:text-(--color-primary)">
+                      {{ article.title }}
+                    </p>
+                    <span class="text-xs text-(--text-muted)">
+                      {{ formatViews(article.views) }} views
+                    </span>
+                  </div>
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Need More Help? -->
+        <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+          <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-(--bg-elevated)">
+            <i class="pi pi-comments text-xl text-(--text-secondary)"></i>
+          </div>
+          <h3 class="font-semibold text-(--text-primary)">Need more help?</h3>
+          <p class="mt-2 text-sm text-(--text-secondary)">
+            Can't find what you're looking for? Our support team is here to help.
+          </p>
+          <p-button
+            label="Contact Support"
+            icon="pi pi-send"
+            class="mt-4 w-full"
+            [outlined]="true"
+          />
+        </div>
+
+        <!-- Tags Cloud -->
+        <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+          <h3 class="mb-4 font-semibold text-(--text-primary)">Popular Tags</h3>
+          <div class="flex flex-wrap gap-2">
+            @for (tag of ['getting-started', 'billing', 'api', 'integration', 'troubleshooting', 'sla', 'workflow']; track tag) {
+              <span class="cursor-pointer rounded-full bg-(--bg-elevated) px-3 py-1 text-sm text-(--text-secondary) transition-colors hover:bg-(--hover-bg)">
+                {{ tag }}
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Article Editor Dialog -->
+<app-article-editor-dialog
+  [(visible)]="showArticleDialog"
+  [article]="editingArticle()"
+  (save)="onArticleSave($event)"
+/>

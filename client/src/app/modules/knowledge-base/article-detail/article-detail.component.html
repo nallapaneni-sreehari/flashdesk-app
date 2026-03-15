@@ -1,0 +1,235 @@
+<div class="mx-auto max-w-4xl">
+  @if (isLoading()) {
+    <!-- Loading State -->
+    <div class="space-y-6">
+      <p-skeleton width="8rem" height="2rem" />
+      <p-skeleton width="70%" height="2.5rem" />
+      <div class="flex items-center gap-4">
+        <p-skeleton width="2.5rem" height="2.5rem" shape="circle" />
+        <div>
+          <p-skeleton width="8rem" height="1rem" styleClass="mb-1" />
+          <p-skeleton width="12rem" height="0.75rem" />
+        </div>
+      </div>
+      <p-skeleton width="100%" height="20rem" />
+    </div>
+  } @else if (article()) {
+    <!-- Breadcrumb -->
+    <nav class="mb-6 flex items-center gap-2 text-sm">
+      <a 
+        routerLink="/knowledge-base" 
+        class="text-(--text-secondary) transition-colors hover:text-(--color-primary)"
+      >
+        Knowledge Base
+      </a>
+      <i class="pi pi-chevron-right text-xs text-(--text-muted)"></i>
+      @if (article()?.category) {
+        <button
+          (click)="goToCategory()"
+          class="text-(--text-secondary) transition-colors hover:text-(--color-primary)"
+        >
+          {{ article()?.category?.name }}
+        </button>
+        <i class="pi pi-chevron-right text-xs text-(--text-muted)"></i>
+      }
+      <span class="truncate text-(--text-primary)">{{ article()?.title }}</span>
+    </nav>
+
+    <!-- Category Badge -->
+    @if (article()?.category) {
+      <div class="mb-4">
+        <span 
+          class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-medium text-white"
+          [style.background]="article()?.category?.color"
+        >
+          <i [class]="article()?.category?.icon" class="text-xs"></i>
+          {{ article()?.category?.name }}
+        </span>
+      </div>
+    }
+
+    <!-- Title -->
+    <h1 class="text-3xl font-bold text-(--text-primary) md:text-4xl">
+      {{ article()?.title }}
+    </h1>
+
+    <!-- Meta Info -->
+    <div class="mt-6 flex flex-wrap items-center gap-6 border-b border-(--border-default) pb-6">
+      <div class="flex items-center gap-3">
+        @if (article()?.author?.avatar) {
+          <p-avatar 
+            [image]="article()?.author?.avatar" 
+            shape="circle" 
+            size="normal"
+          />
+        } @else {
+          <p-avatar 
+            [label]="(article()?.author?.name ?? 'A').charAt(0)" 
+            shape="circle"
+            size="normal"
+            [style]="{ 'background-color': 'var(--color-primary)', 'color': 'white' }"
+          />
+        }
+        <div>
+          <div class="text-sm font-medium text-(--text-primary)">
+            {{ article()?.author?.name }}
+          </div>
+          <div class="text-xs text-(--text-muted)">
+            Updated {{ formatDate(article()?.updatedAt) }}
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4 text-sm text-(--text-muted)">
+        <span class="flex items-center gap-1">
+          <i class="pi pi-eye"></i>
+          {{ formatViews(article()?.views ?? 0) }} views
+        </span>
+        <span class="flex items-center gap-1">
+          <i class="pi pi-clock"></i>
+          5 min read
+        </span>
+      </div>
+
+      <!-- Actions -->
+      <div class="ml-auto flex items-center gap-2">
+        <p-button
+          icon="pi pi-share-alt"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          pTooltip="Share"
+          tooltipPosition="top"
+          (onClick)="shareArticle()"
+        />
+        <p-button
+          icon="pi pi-print"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          pTooltip="Print"
+          tooltipPosition="top"
+          (onClick)="printArticle()"
+        />
+      </div>
+    </div>
+
+    <!-- Article Content -->
+    <div class="article-content py-8" [innerHTML]="safeContent()"></div>
+
+    <!-- Tags -->
+    @if (article()?.tags?.length) {
+      <div class="border-t border-(--border-default) py-6">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-sm font-medium text-(--text-secondary)">Tags:</span>
+          @for (tag of article()?.tags; track tag) {
+            <span class="rounded-full bg-(--bg-elevated) px-3 py-1 text-sm text-(--text-secondary)">
+              {{ tag }}
+            </span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Feedback Section -->
+    <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+      @if (feedbackGiven()) {
+        <div class="text-center">
+          <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+            <i class="pi pi-check text-xl text-green-600"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-(--text-primary)">Thanks for your feedback!</h3>
+          <p class="mt-1 text-sm text-(--text-secondary)">
+            Your feedback helps us improve our documentation.
+          </p>
+        </div>
+      } @else {
+        <div class="text-center">
+          <h3 class="text-lg font-semibold text-(--text-primary)">Was this article helpful?</h3>
+          <p class="mt-1 text-sm text-(--text-secondary)">
+            Help us improve by sharing your feedback
+          </p>
+          <div class="mt-4 flex justify-center gap-3">
+            <p-button
+              label="Yes, helpful"
+              icon="pi pi-thumbs-up"
+              severity="success"
+              [outlined]="true"
+              (onClick)="giveFeedback(true)"
+            />
+            <p-button
+              label="Not really"
+              icon="pi pi-thumbs-down"
+              severity="secondary"
+              [outlined]="true"
+              (onClick)="giveFeedback(false)"
+            />
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Related Articles -->
+    @if (relatedArticles().length > 0) {
+      <div class="mt-8">
+        <h2 class="mb-4 text-xl font-semibold text-(--text-primary)">Related Articles</h2>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          @for (related of relatedArticles(); track related.id) {
+            <button
+              (click)="openRelatedArticle(related)"
+              class="group rounded-xl border border-(--border-default) bg-(--bg-surface) p-4 text-left transition-all hover:border-(--color-primary) hover:shadow-md"
+            >
+              <div class="flex items-start gap-3">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-(--bg-elevated)">
+                  <i class="pi pi-file-edit text-(--text-secondary)"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="font-medium text-(--text-primary) group-hover:text-(--color-primary)">
+                    {{ related.title }}
+                  </p>
+                  <p class="mt-1 line-clamp-1 text-sm text-(--text-muted)">
+                    {{ related.excerpt }}
+                  </p>
+                </div>
+                <i class="pi pi-arrow-right shrink-0 text-(--text-muted) opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100"></i>
+              </div>
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Navigation -->
+    <div class="mt-8 flex justify-between border-t border-(--border-default) pt-6">
+      <p-button
+        label="Back to Knowledge Base"
+        icon="pi pi-arrow-left"
+        [text]="true"
+        severity="secondary"
+        (onClick)="goBack()"
+      />
+      <p-button
+        label="Contact Support"
+        icon="pi pi-send"
+        [outlined]="true"
+      />
+    </div>
+  } @else {
+    <!-- Not Found -->
+    <div class="py-12 text-center">
+      <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-(--bg-elevated)">
+        <i class="pi pi-file-excel text-4xl text-(--text-muted)"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-(--text-primary)">Article not found</h2>
+      <p class="mt-2 text-(--text-secondary)">
+        The article you're looking for doesn't exist or has been removed.
+      </p>
+      <p-button
+        label="Browse Knowledge Base"
+        icon="pi pi-arrow-left"
+        class="mt-6"
+        (onClick)="goBack()"
+      />
+    </div>
+  }
+</div>

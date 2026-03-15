@@ -1,0 +1,789 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-(--text-primary)">Tickets</h1>
+      <p class="mt-1 text-sm text-(--text-secondary)">
+        Manage and respond to customer support tickets
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <!-- View Toggle -->
+      <div class="hidden sm:flex items-center rounded-lg border border-(--border-default) bg-(--bg-base) p-1">
+        @for (option of viewOptions; track option.value) {
+          <button
+            type="button"
+            [pTooltip]="option.tooltip"
+            tooltipPosition="bottom"
+            (click)="viewMode = option.value"
+            class="flex items-center justify-center w-9 h-9 rounded-md transition-all duration-200"
+            [ngClass]="{
+              'bg-primary text-white': viewMode === option.value,
+              'text-(--text-secondary) hover:bg-(--hover-bg) hover:text-(--text-primary)': viewMode !== option.value
+            }"
+          >
+            <i [class]="option.icon"></i>
+          </button>
+        }
+      </div>
+      <p-button label="New Ticket" icon="pi pi-plus" (onClick)="showCreateTicketDialog = true" />
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-4">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <!-- Search -->
+      <div class="flex-1">
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="searchQuery"
+            placeholder="Search tickets by ID, subject, or customer..."
+            class="w-full lg:max-w-md"
+          />
+        </p-iconfield>
+      </div>
+
+      <!-- Filter Dropdowns -->
+      <div class="flex flex-wrap items-center gap-3">
+        <p-select
+          [(ngModel)]="selectedStatus"
+          [options]="statusOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Status"
+          class="w-40"
+        />
+        <p-select
+          [(ngModel)]="selectedPriority"
+          [options]="priorityOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Priority"
+          class="w-44"
+        >
+          <ng-template pTemplate="selectedItem" let-selected>
+            @if (selected) {
+              <div class="flex items-center gap-2">
+                @if (selected.icon) {
+                  <i [class]="selected.icon + ' ' + selected.color"></i>
+                }
+                <span>{{ selected.label }}</span>
+              </div>
+            }
+          </ng-template>
+          <ng-template pTemplate="item" let-option>
+            <div class="flex items-center gap-2">
+              @if (option.icon) {
+                <i [class]="option.icon + ' ' + option.color"></i>
+              }
+              <span>{{ option.label }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+        <p-button
+          label="Advanced Filters"
+          icon="pi pi-filter"
+          [outlined]="true"
+          [badge]="hasAdvancedFilters ? activeFilterCount.toString() : undefined"
+          badgeSeverity="contrast"
+          (onClick)="openFilterSidebar()"
+        />
+        @if (selectedStatus || selectedPriority || searchQuery || hasAdvancedFilters || activeQuickFilter) {
+          <p-button
+            label="Clear"
+            icon="pi pi-times"
+            [text]="true"
+            severity="secondary"
+            (onClick)="clearFilters(); clearAdvancedFilters(); clearQuickFilter()"
+          />
+        }
+      </div>
+    </div>
+
+    <!-- Quick Filters -->
+    <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-(--border-muted) mt-4">
+      <span class="text-sm text-(--text-secondary) mr-1">Quick:</span>
+      @for (filter of quickFilterOptions; track filter.id) {
+        <button
+          (click)="selectQuickFilter(filter.id)"
+          [class]="activeQuickFilter === filter.id 
+            ? 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-(--color-primary) text-white'
+            : 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-(--bg-elevated) text-(--text-secondary) hover:bg-(--hover-bg) hover:text-(--text-primary) border border-(--border-muted)'"
+        >
+          <i [class]="filter.icon + ' text-xs'"></i>
+          {{ filter.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Bulk Actions Bar -->
+  @if (selectedTickets.length > 0) {
+    <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="text-sm font-medium text-(--text-primary)">
+            {{ selectedTickets.length }} ticket(s) selected
+          </span>
+          <p-button
+            label="Clear"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            (onClick)="clearSelection()"
+          />
+        </div>
+        <div class="flex items-center gap-2">
+          <p-button
+            label="Export"
+            icon="pi pi-download"
+            [outlined]="true"
+            size="small"
+            (onClick)="exportSelectedTickets()"
+          />
+          <p-button
+            label="Resolve"
+            icon="pi pi-check-circle"
+            [outlined]="true"
+            severity="success"
+            size="small"
+            (onClick)="bulkResolveTickets()"
+          />
+          @if (isAdmin()) {
+          <p-button
+            label="Delete"
+            icon="pi pi-trash"
+            [outlined]="true"
+            severity="danger"
+            size="small"
+            (onClick)="bulkDeleteTickets()"
+          />
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- List View (Table) -->
+  @if (viewMode === 'list') {
+    <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) overflow-hidden">
+      <p-table
+      [value]="filteredTickets"
+      [paginator]="true"
+      [rows]="5"
+      [rowsPerPageOptions]="[5, 10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} tickets"
+      [tableStyle]="{ 'min-width': '60rem' }"
+      styleClass="p-datatable-sm"
+      [(selection)]="selectedTickets"
+      [selectionMode]="'multiple'"
+      dataKey="id"
+      [customSort]="true"
+      (sortFunction)="customSort($event)"
+      paginatorDropdownAppendTo="body"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="bg-(--bg-muted)! w-12">
+            <p-tableHeaderCheckbox />
+          </th>
+          <th pSortableColumn="id" class="bg-(--bg-muted)!">
+            <div class="flex items-center gap-2">
+              Ticket ID
+              <p-sortIcon field="id" />
+            </div>
+          </th>
+          <th pSortableColumn="subject" class="bg-(--bg-muted)!">
+            <div class="flex items-center gap-2">
+              Subject
+              <p-sortIcon field="subject" />
+            </div>
+          </th>
+          <th class="bg-(--bg-muted)!">Customer</th>
+          <th pSortableColumn="status" class="bg-(--bg-muted)!">
+            <div class="flex items-center gap-2">
+              Status
+              <p-sortIcon field="status" />
+            </div>
+          </th>
+          <th pSortableColumn="priority" class="bg-(--bg-muted)!">
+            <div class="flex items-center gap-2">
+              Priority
+              <p-sortIcon field="priority" />
+            </div>
+          </th>
+          <th class="bg-(--bg-muted)!">Assigned To</th>
+          <th pSortableColumn="createdAt" class="bg-(--bg-muted)!">
+            <div class="flex items-center gap-2">
+              Created
+              <p-sortIcon field="createdAt" />
+            </div>
+          </th>
+          <th class="bg-(--bg-muted)!">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-ticket>
+        <tr class="hover:bg-(--hover-bg) transition-colors cursor-pointer">
+          <!-- Selection Checkbox -->
+          <td (click)="$event.stopPropagation()">
+            <p-tableCheckbox [value]="ticket" />
+          </td>
+          <!-- Ticket ID -->
+          <td (click)="viewTicket(ticket.ticketNumber)">
+            <span class="font-mono text-sm font-medium hover:underline" style="color: var(--color-primary)">
+              {{ ticket.ticketPrefix || 'TKT' }}-{{ ticket.ticketNumber }}
+            </span>
+          </td>
+
+          <!-- Subject -->
+          <td (click)="viewTicket(ticket.ticketNumber)">
+            <div class="max-w-xs">
+              <p class="truncate font-medium text-(--text-primary) hover:underline">{{ ticket.subject }}</p>
+            </div>
+          </td>
+
+          <!-- Customer -->
+          <td>
+            <div class="flex items-center gap-3">
+              <p-avatar
+                [label]="ticket.customer.name.charAt(0)"
+                shape="circle"
+                size="normal"
+                [style]="{ 'background-color': 'var(--color-tertiary)', 'color': 'var(--color-primary)' }"
+              />
+              <div>
+                <p class="font-medium text-(--text-primary)">{{ ticket.customer.name }}</p>
+                <p class="text-xs text-(--text-secondary)">{{ ticket.customer.email }}</p>
+              </div>
+            </div>
+          </td>
+
+          <!-- Status -->
+          <td>
+            <p-tag [value]="formatStatus(ticket.status)" [severity]="getStatusSeverity(ticket.status)" text />
+          </td>
+
+          <!-- Priority -->
+          <td>
+            <div class="flex items-center gap-1.5" [pTooltip]="(ticket.priority | titlecase)" tooltipPosition="top">
+              @switch (ticket.priority) {
+                @case ('urgent') {
+                  <i class="pi pi-angle-double-up text-lg text-red-600"></i>
+                }
+                @case ('high') {
+                  <i class="pi pi-angle-up text-lg text-orange-500"></i>
+                }
+                @case ('medium') {
+                  <i class="pi pi-minus text-base text-yellow-500"></i>
+                }
+                @case ('low') {
+                  <i class="pi pi-angle-down text-lg text-blue-500"></i>
+                }
+              }
+              <span class="text-sm text-(--text-secondary)">{{ ticket.priority | titlecase }}</span>
+            </div>
+          </td>
+
+          <!-- Assigned Agent -->
+          <td (dblclick)="startEditingAgent(ticket)" class="cursor-pointer">
+            @if (isEditingAgent(ticket.id)) {
+              <!-- Edit Mode -->
+              <div class="flex items-center gap-2">
+                <p-select
+                  [options]="agents"
+                  [ngModel]="pendingAgent"
+                  (ngModelChange)="selectPendingAgent($event)"
+                  optionLabel="name"
+                  placeholder="Search agents..."
+                  [showClear]="true"
+                  [filter]="true"
+                  filterBy="name"
+                  filterPlaceholder="Search..."
+                  appendTo="body"
+                  [style]="{ width: '180px' }"
+                  [autofocus]="true"
+                >
+                  <ng-template pTemplate="selectedItem" let-agent>
+                    @if (agent) {
+                      <div class="flex items-center gap-2">
+                        <p-avatar [image]="agent.avatar" shape="circle" [style]="{ width: '1.5rem', height: '1.5rem' }" />
+                        <span>{{ agent.name }}</span>
+                      </div>
+                    }
+                  </ng-template>
+                  <ng-template pTemplate="item" let-agent>
+                    <div class="flex items-center gap-2">
+                      <p-avatar [image]="agent.avatar" shape="circle" [style]="{ width: '1.5rem', height: '1.5rem' }" />
+                      <span>{{ agent.name }}</span>
+                    </div>
+                  </ng-template>
+                </p-select>
+                <p-button
+                  icon="pi pi-check"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="success"
+                  size="small"
+                  pTooltip="Confirm"
+                  tooltipPosition="top"
+                  (onClick)="confirmAgentAssignment()"
+                />
+                <p-button
+                  icon="pi pi-times"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="secondary"
+                  size="small"
+                  pTooltip="Cancel"
+                  tooltipPosition="top"
+                  (onClick)="cancelEditingAgent()"
+                />
+              </div>
+            } @else {
+              <!-- Display Mode -->
+              @if (ticket.assignedAgent) {
+                <div 
+                  class="flex items-center gap-2 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors hover:bg-(--hover-bg)"
+                  pTooltip="Double-click to reassign"
+                  tooltipPosition="top"
+                >
+                  <p-avatar
+                    [image]="ticket.assignedAgent.avatar"
+                    shape="circle"
+                    size="normal"
+                  />
+                  <span class="text-sm text-(--text-primary)">{{ ticket.assignedAgent.name }}</span>
+                </div>
+              } @else {
+                <div 
+                  class="flex items-center gap-2 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors hover:bg-(--hover-bg)"
+                  pTooltip="Double-click to assign"
+                  tooltipPosition="top"
+                >
+                  <span class="text-sm text-(--text-muted) italic">Unassigned</span>
+                  <i class="pi pi-user-plus text-xs text-(--text-muted)"></i>
+                </div>
+              }
+            }
+          </td>
+
+          <!-- Created Date -->
+          <td>
+            <span
+              class="text-sm text-(--text-secondary)"
+              [pTooltip]="(ticket.createdAt | date:'medium') ?? ''"
+              tooltipPosition="top"
+            >
+              {{ formatDate(ticket.createdAt) }}
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td>
+            <div class="flex items-center gap-1">
+              <p-button
+                icon="pi pi-eye"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="View"
+                tooltipPosition="top"
+                (onClick)="viewTicket(ticket.id)"
+              />
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Edit"
+                tooltipPosition="top"
+              />
+              @if (isAdmin()) {
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                pTooltip="Delete"
+                tooltipPosition="top"
+              />
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="text-center py-12">
+            <div class="flex flex-col items-center gap-3">
+              <i class="pi pi-ticket text-4xl text-(--text-muted)"></i>
+              <p class="text-(--text-secondary)">No tickets found</p>
+              @if (searchQuery || selectedStatus || selectedPriority || hasAdvancedFilters || activeQuickFilter) {
+                <p-button
+                  label="Clear filters"
+                  [text]="true"
+                  severity="secondary"
+                  (onClick)="clearFilters(); clearAdvancedFilters(); clearQuickFilter()"
+                />
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+    </div>
+  }
+
+  <!-- Card View -->
+  @if (viewMode === 'card') {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      @for (ticket of filteredTickets; track ticket.id) {
+        <div 
+          class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-4 hover:shadow-md hover:border-(--color-primary) transition-all cursor-pointer"
+          (click)="viewTicket(ticket.ticketNumber)"
+        >
+          <!-- Card Header -->
+          <div class="flex items-start justify-between mb-3">
+            <span class="font-mono text-sm font-medium" style="color: var(--color-primary)">{{ ticket.ticketPrefix || 'TKT' }}-{{ ticket.ticketNumber }}</span>
+            <p-tag [value]="formatStatus(ticket.status)" [severity]="getStatusSeverity(ticket.status)" text />
+          </div>
+
+          <!-- Subject -->
+          <h3 class="font-medium text-(--text-primary) mb-2 line-clamp-2">{{ ticket.subject }}</h3>
+
+          <!-- Customer -->
+          <div class="flex items-center gap-2 mb-3">
+            <p-avatar
+              [label]="ticket.customer.name.charAt(0)"
+              shape="circle"
+              size="normal"
+              [style]="{ width: '1.5rem', height: '1.5rem', fontSize: '0.75rem', 'background-color': 'var(--color-tertiary)', 'color': 'var(--color-primary)' }"
+            />
+            <span class="text-sm text-(--text-secondary) truncate">{{ ticket.customer.name }}</span>
+          </div>
+
+          <!-- Footer -->
+          <div class="flex items-center justify-between pt-3 border-t border-(--border-muted)">
+            <!-- Priority -->
+            <div class="flex items-center gap-1">
+              @switch (ticket.priority) {
+                @case ('urgent') {
+                  <i class="pi pi-angle-double-up text-red-600"></i>
+                }
+                @case ('high') {
+                  <i class="pi pi-angle-up text-orange-500"></i>
+                }
+                @case ('medium') {
+                  <i class="pi pi-minus text-yellow-500"></i>
+                }
+                @case ('low') {
+                  <i class="pi pi-angle-down text-blue-500"></i>
+                }
+              }
+              <span class="text-xs text-(--text-secondary)">{{ ticket.priority | titlecase }}</span>
+            </div>
+
+            <!-- Assigned Agent -->
+            @if (ticket.assignedAgent) {
+              <p-avatar
+                [image]="ticket.assignedAgent.avatar"
+                shape="circle"
+                [style]="{ width: '1.5rem', height: '1.5rem' }"
+                [pTooltip]="ticket.assignedAgent.name"
+                tooltipPosition="top"
+              />
+            } @else {
+              <span class="text-xs text-(--text-muted) italic">Unassigned</span>
+            }
+          </div>
+
+          <!-- Created Date -->
+          <div class="mt-2 text-xs text-(--text-muted)">
+            {{ formatDate(ticket.createdAt) }}
+          </div>
+        </div>
+      } @empty {
+        <div class="col-span-full flex flex-col items-center justify-center py-12">
+          <i class="pi pi-ticket text-4xl text-(--text-muted) mb-3"></i>
+          <p class="text-(--text-secondary)">No tickets found</p>
+          @if (searchQuery || selectedStatus || selectedPriority || hasAdvancedFilters || activeQuickFilter) {
+            <p-button
+              label="Clear filters"
+              [text]="true"
+              severity="secondary"
+              (onClick)="clearFilters(); clearAdvancedFilters(); clearQuickFilter()"
+              class="mt-3"
+            />
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Kanban View -->
+  @if (viewMode === 'kanban') {
+    <div class="flex gap-4 overflow-x-auto pb-4">
+      @for (status of kanbanStatuses; track status.value) {
+        <div 
+          pDroppable="kanban"
+          (onDragEnter)="onKanbanDragEnter(status.value)"
+          (onDragLeave)="onKanbanDragLeave()"
+          (onDrop)="onKanbanDrop(status.value)"
+          class="shrink-0 w-80 rounded-xl p-3 transition-all duration-200"
+          [ngClass]="{
+            'bg-(--bg-muted)': dragOverColumn !== status.value,
+            'bg-[color-mix(in_srgb,var(--color-primary)_8%,var(--bg-muted))] ring-2 ring-(--color-primary) ring-opacity-40': dragOverColumn === status.value && draggedTicket?.status !== status.value
+          }"
+        >
+          <!-- Column Header -->
+          <div class="flex items-center justify-between mb-3 px-1">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-(--text-primary)">{{ status.label }}</span>
+              <span class="px-2 py-0.5 rounded-full text-xs bg-(--bg-surface) text-(--text-secondary)">
+                {{ getTicketsByStatus(status.value).length }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Tickets -->
+          <div class="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto min-h-[60px]">
+            @for (ticket of getTicketsByStatus(status.value); track ticket.id) {
+              <div 
+                pDraggable="kanban"
+                (onDragStart)="onKanbanDragStart(ticket)"
+                (onDragEnd)="onKanbanDragEnd()"
+                class="group rounded-lg border bg-(--bg-surface) p-3 transition-all cursor-pointer"
+                [ngClass]="{
+                  'border-(--border-default) hover:shadow-sm hover:border-(--color-primary)': draggedTicket?.id !== ticket.id,
+                  'opacity-40 border-dashed border-(--color-primary)': draggedTicket?.id === ticket.id
+                }"
+                (click)="viewTicket(ticket.ticketNumber)"
+              >
+                <!-- Ticket ID & Priority -->
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-1.5">
+                    <i class="pi pi-grip-vertical text-xs text-(--text-muted) opacity-0 group-hover:opacity-100 transition-opacity cursor-grab"></i>
+                    <span class="font-mono text-xs font-medium" style="color: var(--color-primary)">{{ ticket.ticketPrefix || 'TKT' }}-{{ ticket.ticketNumber }}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    @switch (ticket.priority) {
+                      @case ('urgent') {
+                        <i class="pi pi-angle-double-up text-sm text-red-600"></i>
+                      }
+                      @case ('high') {
+                        <i class="pi pi-angle-up text-sm text-orange-500"></i>
+                      }
+                      @case ('medium') {
+                        <i class="pi pi-minus text-sm text-yellow-500"></i>
+                      }
+                      @case ('low') {
+                        <i class="pi pi-angle-down text-sm text-blue-500"></i>
+                      }
+                    }
+                  </div>
+                </div>
+
+                <!-- Subject -->
+                <p class="text-sm font-medium text-(--text-primary) line-clamp-2 mb-2">{{ ticket.subject }}</p>
+
+                <!-- Footer -->
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-(--text-muted)">{{ formatDate(ticket.createdAt) }}</span>
+                  @if (ticket.assignedAgent) {
+                    <div class="flex items-center gap-1.5" [pTooltip]="ticket.assignedAgent.name" tooltipPosition="top">
+                      @if (ticket.assignedAgent.avatar) {
+                        <p-avatar
+                          [image]="ticket.assignedAgent.avatar"
+                          shape="circle"
+                          [style]="{ width: '1.25rem', height: '1.25rem' }"
+                        />
+                      } @else {
+                        <p-avatar
+                          [label]="ticket.assignedAgent.name.charAt(0)"
+                          shape="circle"
+                          [style]="{ width: '1.25rem', height: '1.25rem', fontSize: '0.6rem', 'background-color': 'var(--color-tertiary)', 'color': 'var(--color-primary)' }"
+                        />
+                      }
+                      <span class="text-xs text-(--text-secondary) max-w-[80px] truncate">{{ ticket.assignedAgent.name }}</span>
+                    </div>
+                  } @else {
+                    <span class="text-xs text-(--text-muted) italic">Unassigned</span>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <div class="text-center py-6 text-sm text-(--text-muted)">
+                No tickets
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Advanced Filter Sidebar -->
+<p-drawer
+  [(visible)]="filterSidebarVisible"
+  position="right"
+  [style]="{ width: '400px' }"
+  header="Advanced Filters"
+  styleClass="bg-(--bg-surface)"
+>
+  <ng-template pTemplate="headless">
+    <div class="flex flex-col h-full bg-(--bg-surface)">
+      <!-- Header -->
+      <div class="flex items-center justify-between p-4 border-b border-(--border-default) bg-(--bg-surface)">
+        <div class="flex items-center gap-3">
+          <i class="pi pi-filter text-lg" style="color: var(--color-primary)"></i>
+          <span class="text-lg font-semibold text-(--text-primary)">Advanced Filters</span>
+        </div>
+        <p-button
+          icon="pi pi-times"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          (onClick)="filterSidebarVisible = false"
+        />
+      </div>
+
+      <!-- Filter Content -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-6 bg-(--bg-surface)">
+        <!-- Status Filter -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-(--text-primary)">Status</label>
+          <p-multiselect
+            [(ngModel)]="advancedFilters.statuses"
+            [options]="statusMultiOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select statuses"
+            display="chip"
+            [style]="{ width: '100%' }"
+          />
+        </div>
+
+        <!-- Priority Filter -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-(--text-primary)">Priority</label>
+          <p-multiselect
+            [(ngModel)]="advancedFilters.priorities"
+            [options]="priorityMultiOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select priorities"
+            display="chip"
+            [style]="{ width: '100%' }"
+          >
+            <ng-template pTemplate="item" let-option>
+              <div class="flex items-center gap-2">
+                <i [class]="option.icon + ' ' + option.color"></i>
+                <span>{{ option.label }}</span>
+              </div>
+            </ng-template>
+          </p-multiselect>
+        </div>
+
+        <!-- Assigned Agent Filter -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-(--text-primary)">Assigned Agent</label>
+          <p-multiselect
+            [(ngModel)]="advancedFilters.assignedAgents"
+            [options]="agents"
+            optionLabel="name"
+            optionValue="name"
+            placeholder="Select agents"
+            display="chip"
+            [filter]="true"
+            filterBy="name"
+            [style]="{ width: '100%' }"
+          >
+            <ng-template pTemplate="item" let-agent>
+              <div class="flex items-center gap-2">
+                <p-avatar [image]="agent.avatar" shape="circle" [style]="{ width: '1.5rem', height: '1.5rem' }" />
+                <span>{{ agent.name }}</span>
+              </div>
+            </ng-template>
+          </p-multiselect>
+          <div class="flex items-center gap-2 mt-2">
+            <p-checkbox
+              [(ngModel)]="advancedFilters.showUnassigned"
+              [binary]="true"
+              inputId="showUnassigned"
+            />
+            <label for="showUnassigned" class="text-sm text-(--text-secondary) cursor-pointer">
+              Show unassigned tickets
+            </label>
+          </div>
+        </div>
+
+        <!-- Customer Filter -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-(--text-primary)">Customer</label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="advancedFilters.customerName"
+            placeholder="Search by name or email"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Created Date Range -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-(--text-primary)">Created Date</label>
+          <p-datepicker
+            [(ngModel)]="advancedFilters.createdDateRange"
+            selectionMode="range"
+            placeholder="Select date range"
+            [showIcon]="true"
+            [style]="{ width: '100%' }"
+            dateFormat="mm/dd/yy"
+            [showButtonBar]="true"
+          />
+        </div>
+
+        <!-- Updated Date Range -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-(--text-primary)">Updated Date</label>
+          <p-datepicker
+            [(ngModel)]="advancedFilters.updatedDateRange"
+            selectionMode="range"
+            placeholder="Select date range"
+            [showIcon]="true"
+            [style]="{ width: '100%' }"
+            dateFormat="mm/dd/yy"
+            [showButtonBar]="true"
+          />
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-between gap-3 p-4 border-t border-(--border-default) bg-(--bg-surface)">
+        <p-button
+          label="Clear All"
+          [text]="true"
+          severity="secondary"
+          (onClick)="clearAdvancedFilters()"
+        />
+        <p-button
+          label="Apply Filters"
+          icon="pi pi-check"
+          (onClick)="applyAdvancedFilters()"
+        />
+      </div>
+    </div>
+  </ng-template>
+</p-drawer>
+
+<!-- Create Ticket Dialog -->
+<app-create-ticket-dialog
+  [(visible)]="showCreateTicketDialog"
+  (ticketCreated)="onTicketCreated($event)"
+/>

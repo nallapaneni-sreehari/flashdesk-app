@@ -1,0 +1,39 @@
+<aside class="flex h-full flex-col border-r border-[var(--border-default)] bg-[var(--bg-surface)] transition-all duration-300"
+  [class.w-64]="!collapsed()" [class.w-16]="collapsed()">
+  <!-- Logo -->
+  @if (!collapsed()) {
+  <div class="flex h-16 items-center justify-start border-b border-[var(--border-default)] px-4">
+    <span class="text-xl font-bold" style="color: var(--color-primary)">Flashdesk</span>
+  </div>
+  } @else {
+  <div class="flex h-16 items-center justify-center border-b border-[var(--border-default)] px-4">
+    <span class="text-xl font-bold" style="color: var(--color-primary)">F</span>
+  </div>
+  }
+
+  <!-- Navigation -->
+  <nav class="flex-1 space-y-1 p-2">
+    @for (item of navItems(); track item.route) {
+    <a [routerLink]="item.route" routerLinkActive="active-nav-item"
+      [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+      class="nav-item flex items-center gap-3 rounded-lg px-3 py-2.5 text-[var(--text-primary)] transition-colors hover:bg-[var(--hover-bg)]"
+      [class.justify-center]="collapsed()" [pTooltip]="collapsed() ? item.label + (item.shortcutKey ? ' (' + item.shortcutKey + ')' : '') : ''" tooltipPosition="right" appendTo="body">
+      <i [class]="item.icon" class="text-lg"></i>
+      @if (!collapsed()) {
+      <span class="flex-1 font-medium">{{ item.label }}</span>
+      @if (item.shortcutKey) {
+      <span class="hidden text-[10px] text-[var(--text-muted)] lg:inline">{{ item.shortcutKey }}</span>
+      }
+      }
+    </a>
+    }
+  </nav>
+
+  <!-- Collapse Button -->
+  <div class="border-t border-[var(--border-default)] p-2">
+    <div [pTooltip]="collapsed() ? 'Expand (M)' : 'Collapse (M)'" tooltipPosition="right" appendTo="body">
+      <p-button [icon]="collapsed() ? 'pi pi-angle-right' : 'pi pi-angle-left'" [text]="true" [rounded]="true"
+        severity="secondary" (onClick)="onToggle()" class="w-full" />
+    </div>
+  </div>
+</aside>

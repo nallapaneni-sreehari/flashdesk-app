@@ -1,0 +1,263 @@
+<div class="flex flex-col gap-4">
+    <!-- Header -->
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-(--text-primary)">Customers</h1>
+            <p class="mt-1 text-sm text-(--text-secondary)">Manage your customer accounts and contacts</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <p-button label="Download template" (onClick)="downloadTemplate()" size="small" text
+                pTooltip="Download a CSV template to bulk import customers" tooltipPosition="bottom" />
+
+            <p-button label="Import CSV" icon="pi pi-upload" severity="secondary" [outlined]="true"
+                (onClick)="triggerFileInput()" />
+            <p-button label="Add Customer" icon="pi pi-plus" (onClick)="openAddDialog()" />
+        </div>
+        <input #fileInput type="file" accept=".csv" class="hidden" (change)="onFileSelected($event)" />
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-4">
+            <div class="flex items-center gap-3">
+                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                    <i class="pi pi-users text-xl text-blue-600 dark:text-blue-400"></i>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-(--text-primary)">{{ totalCustomers() }}</p>
+                    <p class="text-sm text-(--text-secondary)">Total Customers</p>
+                </div>
+            </div>
+        </div>
+        <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-4">
+            <div class="flex items-center gap-3">
+                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
+                    <i class="pi pi-list-check text-xl text-green-600 dark:text-green-400"></i>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-(--text-primary)">{{ filteredCustomers().length }}</p>
+                    <p class="text-sm text-(--text-secondary)">Showing</p>
+                </div>
+            </div>
+        </div>
+        <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-4">
+            <div class="flex items-center gap-3">
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
+                    <i class="pi pi-ticket text-xl text-orange-600 dark:text-orange-400"></i>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-(--text-primary)">{{ totalOpenTickets() }}</p>
+                    <p class="text-sm text-(--text-secondary)">Open Tickets</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex flex-1 flex-col gap-3 lg:flex-row lg:items-center">
+            <!-- Search -->
+            <p-iconfield class="w-full lg:w-80">
+                <p-inputicon styleClass="pi pi-search" />
+                <input type="text" pInputText placeholder="Search by name or email..."
+                    [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" class="w-full" />
+            </p-iconfield>
+        </div>
+
+        <span class="text-sm text-(--text-secondary)">
+            Showing {{ filteredCustomers().length }} of {{ totalCustomers() }} customers
+        </span>
+    </div>
+
+    <!-- Customers Table -->
+    <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) overflow-hidden">
+        <p-table [value]="filteredCustomers()" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]"
+            [showCurrentPageReport]="true" currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+            [tableStyle]="{ 'min-width': '60rem' }" paginatorDropdownAppendTo="body" styleClass="p-datatable-striped">
+
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Customer</th>
+                    <th class="text-center">Total Tickets</th>
+                    <th class="text-center">Open</th>
+                    <th>Created</th>
+                    <th>Last Contact</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-customer>
+                <tr class="hover:bg-(--hover-bg) transition-colors cursor-pointer"
+                    (click)="openViewDialog(customer)">
+                    <!-- Customer Info -->
+                    <td>
+                        <div class="flex items-center gap-2">
+                            @if (customer.avatar) {
+                            <p-avatar [image]="customer.avatar" shape="circle" />
+                            } @else {
+                            <p-avatar [label]="getInitials(customer)" shape="circle"
+                                [style]="{ 'background-color': 'var(--color-primary)', 'color': 'white', 'font-size': '0.75rem' }" />
+                            }
+                            <div>
+                                <p class="font-medium text-(--text-primary)">{{ customer.name }}</p>
+                                <p class="text-xs text-(--text-secondary)">{{ customer.email }}</p>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- Total Tickets -->
+                    <td class="text-center">
+                        <span class="text-sm font-medium text-(--text-primary)">{{ customer.totalTickets }}</span>
+                    </td>
+
+                    <!-- Open Tickets -->
+                    <td class="text-center">
+                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium"
+                            [class]="customer.openTickets > 3 ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'bg-(--bg-elevated) text-(--text-primary)'">
+                            {{ customer.openTickets }}
+                        </span>
+                    </td>
+
+                    <!-- Created -->
+                    <td>
+                        <span class="text-sm text-(--text-secondary)">{{ formatDate(customer.createdAt) }}</span>
+                    </td>
+
+                    <!-- Last Contact -->
+                    <td>
+                        <span class="text-sm text-(--text-secondary)">{{ formatRelativeTime(customer.lastContactAt)
+                            }}</span>
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="text-center">
+                        <div class="flex items-center justify-center gap-1" (click)="$event.stopPropagation()">
+                            <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info" size="small"
+                                pTooltip="View" tooltipPosition="top" (onClick)="openViewDialog(customer)" />
+                            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" size="small"
+                                pTooltip="Edit" tooltipPosition="top" (onClick)="openEditDialog(customer)" />
+                            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+                                pTooltip="Delete" tooltipPosition="top" (onClick)="deleteCustomer(customer)" />
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="6">
+                        <div class="flex flex-col items-center justify-center py-12">
+                            <i class="pi pi-users text-4xl text-(--text-muted)"></i>
+                            <p class="mt-3 text-(--text-secondary)">No customers found</p>
+                            <p class="mt-1 text-sm text-(--text-muted)">Try adjusting your search or filters</p>
+                            <p-button label="Add Customer" icon="pi pi-plus" [text]="true" class="mt-2"
+                                (onClick)="openAddDialog()" />
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>
+
+<!-- Customer Create/Edit Dialog -->
+<app-customer-dialog [visible]="showCustomerDialog()" [customer]="editingCustomer()"
+    (visibleChange)="onDialogClose()" (save)="onCustomerSave($event)" />
+
+<!-- Customer View Dialog -->
+<app-customer-view-dialog [visible]="showViewDialog()" [customer]="viewingCustomer()"
+    (visibleChange)="onViewDialogClose()" (edit)="openEditDialog($any($event))" />
+
+<!-- Import Preview Dialog -->
+<p-dialog header="Import Customers" [(visible)]="showImportDialog" [modal]="true" [draggable]="false"
+    [style]="{ width: '800px', maxWidth: '95vw' }" [contentStyle]="{ overflow: 'auto' }">
+    <div class="flex flex-col gap-4">
+        <!-- Summary -->
+        <div class="flex items-center justify-between rounded-lg bg-(--bg-elevated) p-3">
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-2">
+                    <i class="pi pi-file text-(--text-secondary)"></i>
+                    <span class="text-sm text-(--text-secondary)">{{ importCustomers().length }} rows found</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="pi pi-check-circle text-green-500"></i>
+                    <span class="text-sm text-(--text-secondary)">{{ getValidCount() }} valid</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="pi pi-check-square text-blue-500"></i>
+                    <span class="text-sm text-(--text-secondary)">{{ getSelectedCount() }} selected</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="max-h-96 overflow-auto rounded-lg border border-(--border-default)">
+            <table class="w-full">
+                <thead class="sticky top-0 bg-(--bg-surface)">
+                    <tr class="border-b border-(--border-default)">
+                        <th class="p-3 text-left">
+                            <p-checkbox [(ngModel)]="selectAll" [binary]="true" (onChange)="toggleSelectAll()" />
+                        </th>
+                        <th class="p-3 text-left text-xs font-medium uppercase text-(--text-secondary)">Name</th>
+                        <th class="p-3 text-left text-xs font-medium uppercase text-(--text-secondary)">Email</th>
+                        <th class="p-3 text-left text-xs font-medium uppercase text-(--text-secondary)">Phone</th>
+                        <th class="p-3 text-left text-xs font-medium uppercase text-(--text-secondary)">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (customer of importCustomers(); track customer.email) {
+                    <tr class="border-b border-(--border-muted) last:border-b-0"
+                        [class.opacity-60]="!customer.valid">
+                        <td class="p-3">
+                            <p-checkbox [(ngModel)]="customer.selected" [binary]="true" [disabled]="!customer.valid"
+                                (onChange)="onCustomerSelectChange()" />
+                        </td>
+                        <td class="p-3">
+                            <span class="text-sm text-(--text-primary)">{{ customer.name }}</span>
+                        </td>
+                        <td class="p-3">
+                            <span class="text-sm text-(--text-secondary)">{{ customer.email }}</span>
+                        </td>
+                        <td class="p-3">
+                            <span class="text-sm text-(--text-secondary)">{{ customer.phone || '—' }}</span>
+                        </td>
+                        <td class="p-3">
+                            @if (customer.valid) {
+                            <span class="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                                <i class="pi pi-check-circle"></i> Valid
+                            </span>
+                            } @else {
+                            <span class="inline-flex items-center gap-1 text-xs text-red-600 dark:text-red-400"
+                                pTooltip="{{ customer.error }}" tooltipPosition="top">
+                                <i class="pi pi-exclamation-circle"></i> Invalid
+                            </span>
+                            }
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Note -->
+        <div class="flex items-center justify-between rounded-lg bg-(--bg-muted) p-3">
+            <p class="text-xs text-(--text-muted)">
+                <i class="pi pi-info-circle mr-1"></i>
+                Expected columns: name, email, phone (optional)
+            </p>
+            <a class="cursor-pointer text-xs text-blue-600 hover:underline dark:text-blue-400"
+                (click)="downloadTemplate()">
+                <i class="pi pi-download mr-1"></i>Download template
+            </a>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <div class="flex items-center justify-end gap-2">
+            <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="closeImportDialog()" />
+            <p-button label="Import {{ getSelectedCount() }} Customers" icon="pi pi-download"
+                [disabled]="getSelectedCount() === 0" (onClick)="confirmImport()" />
+        </div>
+    </ng-template>
+</p-dialog>

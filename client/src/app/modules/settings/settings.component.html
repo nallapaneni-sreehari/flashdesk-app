@@ -1,0 +1,63 @@
+<div class="flex h-full flex-col lg:flex-row">
+    <!-- Settings Navigation Sidebar (Desktop) -->
+    <aside class="rounded-md hidden w-94 shrink-0 border-r border-(--border-default) bg-(--bg-surface) p-6 lg:block">
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-(--text-primary)">Settings</h1>
+            <p class="mt-1 text-sm text-(--text-secondary)">Manage your account and preferences</p>
+        </div>
+
+        <nav class="space-y-1">
+            @for (item of navItems; track item.route) {
+            <a [routerLink]="item.route" routerLinkActive="settings-nav-active" pRipple
+                class="group flex items-start gap-3 rounded-xl p-3 transition-all duration-200 hover:bg-(--hover-bg)">
+                <div
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-(--bg-elevated) text-(--text-secondary) transition-all duration-200 group-hover:text-(--text-primary) group-[.settings-nav-active]:bg-(--color-primary) group-[.settings-nav-active]:text-white">
+                    <i [class]="item.icon" class="text-lg"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <div class="font-medium text-(--text-primary)">{{ item.label }}</div>
+                    <div class="text-xs text-(--text-muted) line-clamp-1">{{ item.description }}</div>
+                </div>
+                <i
+                    class="pi pi-chevron-right mt-2.5 text-xs text-(--text-muted) opacity-0 transition-opacity group-hover:opacity-100"></i>
+            </a>
+            }
+        </nav>
+
+        <!-- Help Card -->
+        <div class="mt-8 rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+            <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg"
+                    style="background: var(--color-primary); opacity: 0.1">
+                    <i class="pi pi-question-circle text-lg" style="color: var(--color-primary)"></i>
+                </div>
+                <div>
+                    <div class="text-sm font-medium text-(--text-primary)">Need help?</div>
+                    <div class="text-xs text-(--text-muted)">Check our documentation</div>
+                </div>
+            </div>
+            <a href="#" class="mt-3 flex items-center gap-1 text-sm font-medium" style="color: var(--color-primary)">
+                View docs
+                <i class="pi pi-arrow-right text-xs"></i>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Mobile Navigation -->
+    <div class="shrink-0 overflow-x-auto border-b border-(--border-default) bg-(--bg-surface) px-4 py-3 lg:hidden">
+        <div class="flex gap-2">
+            @for (item of navItems; track item.route) {
+            <a [routerLink]="item.route" routerLinkActive="mobile-nav-active"
+                class="flex shrink-0 items-center gap-2 rounded-full border border-(--border-default) px-4 py-2 text-sm font-medium text-(--text-secondary) transition-all hover:bg-(--hover-bg)">
+                <i [class]="item.icon" class="text-sm"></i>
+                {{ item.label }}
+            </a>
+            }
+        </div>
+    </div>
+
+    <!-- Content Area (Single outlet for both mobile and desktop) -->
+    <main class="flex-1 overflow-y-auto bg-(--bg-base) p-6 lg:p-8">
+        <router-outlet></router-outlet>
+    </main>
+</div>

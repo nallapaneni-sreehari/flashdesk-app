@@ -1,0 +1,123 @@
+@if (isOpen()) {
+  <!-- Overlay -->
+  <div
+    class="search-overlay fixed inset-0 z-50 flex justify-center bg-black/30 backdrop-blur-sm transition-opacity duration-200"
+    (click)="onOverlayClick($event)"
+  >
+    <!-- Modal -->
+    <div
+      class="mx-4 mt-24 h-fit w-full max-w-xl animate-in fade-in zoom-in-95 duration-200"
+    >
+      <div
+        class="overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-2xl"
+      >
+        <!-- Search Header -->
+        <div class="flex items-center gap-3 border-b border-[var(--border-muted)] px-4 py-3">
+          <i class="pi pi-search text-lg text-[var(--text-muted)]"></i>
+          <input
+            #searchInput
+            type="text"
+            [ngModel]="query()"
+            (ngModelChange)="onQueryChange($event)"
+            placeholder="Search tickets, customers, agents..."
+            class="flex-1 border-0 bg-transparent text-base text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
+          />
+          <kbd
+            class="hidden rounded bg-[var(--kbd-bg)] px-2 py-1 text-xs text-[var(--text-secondary)] sm:inline-block"
+          >
+            ESC
+          </kbd>
+        </div>
+
+        <!-- Results -->
+        <div class="max-h-96 overflow-y-auto">
+          @if (results().length === 0) {
+            <div class="px-4 py-8 text-center text-[var(--text-secondary)]">
+              <i class="pi pi-search mb-2 text-3xl text-[var(--text-muted)]"></i>
+              <p>No results found</p>
+            </div>
+          } @else {
+            @for (group of results(); track group.type) {
+              <div class="py-2">
+                <!-- Group Label -->
+                <div
+                  class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]"
+                >
+                  {{ group.label }}
+                </div>
+
+                <!-- Results -->
+                @for (result of group.results; track result.id) {
+                  <div
+                    class="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-[var(--text-primary)] transition-colors"
+                    [class.bg-[color-mix(in_srgb,var(--color-primary)_10%,transparent)]]="isSelected(result)"
+                    [style.color]="isSelected(result) ? 'var(--color-primary)' : ''"
+                    (click)="selectResult(result)"
+                    (mouseenter)="onResultHover(result)"
+                  >
+                    @if (result.type === 'action') {
+                      <div
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                        [style.background-color]="'color-mix(in srgb, var(--color-primary) 12%, transparent)'"
+                        [style.color]="'var(--color-primary)'"
+                      >
+                        <i [class]="result.icon" class="text-sm"></i>
+                      </div>
+                    } @else {
+                      <i
+                        [class]="result.icon"
+                        class="text-base"
+                        [style.color]="isSelected(result) ? 'var(--color-primary)' : 'var(--text-muted)'"
+                      ></i>
+                    }
+                    <div class="min-w-0 flex-1">
+                      <div class="truncate font-medium">{{ result.title }}</div>
+                      @if (result.subtitle) {
+                        <div
+                          class="truncate text-sm"
+                          [style.color]="isSelected(result) ? 'var(--color-secondary)' : 'var(--text-secondary)'"
+                        >
+                          {{ result.subtitle }}
+                        </div>
+                      }
+                    </div>
+                    @if (isSelected(result)) {
+                      <kbd
+                        class="rounded px-1.5 py-0.5 text-xs"
+                        [style.background-color]="'color-mix(in srgb, var(--color-primary) 15%, transparent)'"
+                        [style.color]="'var(--color-primary)'"
+                      >
+                        ↵
+                      </kbd>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
+
+        <!-- Footer -->
+        <div
+          class="flex items-center justify-between border-t border-[var(--border-muted)] bg-[var(--bg-muted)] px-4 py-2 text-xs text-[var(--text-secondary)]"
+        >
+          <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1">
+              <kbd class="rounded bg-[var(--kbd-bg)] px-1.5 py-0.5">↑</kbd>
+              <kbd class="rounded bg-[var(--kbd-bg)] px-1.5 py-0.5">↓</kbd>
+              <span>to navigate</span>
+            </span>
+            <span class="flex items-center gap-1">
+              <kbd class="rounded bg-[var(--kbd-bg)] px-1.5 py-0.5">↵</kbd>
+              <span>to select</span>
+            </span>
+          </div>
+          <span class="flex items-center gap-1">
+            <kbd class="rounded bg-[var(--kbd-bg)] px-1.5 py-0.5">esc</kbd>
+            <span>to close</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+}

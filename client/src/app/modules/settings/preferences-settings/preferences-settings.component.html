@@ -1,0 +1,292 @@
+<div class="mx-auto max-w-3xl space-y-8">
+  <!-- Page Header -->
+  <div>
+    <h2 class="text-2xl font-bold text-(--text-primary)">Preferences</h2>
+    <p class="mt-1 text-(--text-secondary)">Customize your experience and appearance</p>
+  </div>
+
+  <!-- Appearance -->
+  <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+    <h3 class="mb-6 text-lg font-semibold text-(--text-primary)">Appearance</h3>
+
+    <!-- Theme Selection -->
+    <div class="mb-8">
+      <label class="mb-4 block text-sm font-medium text-(--text-primary)">Theme</label>
+      <div class="grid grid-cols-3 gap-4">
+        @for (theme of themeOptions; track theme.id) {
+          <button
+            (click)="setTheme(theme.id)"
+            class="group relative flex flex-col items-center gap-3 rounded-xl border-2 p-4 transition-all hover:border-(--border-default)"
+            [class]="selectedTheme() === theme.id ? 'border-(--color-primary) bg-[color-mix(in_srgb,var(--color-primary)_5%,transparent)]' : 'border-(--border-default) bg-(--bg-muted)'"
+          >
+            <!-- Theme Preview -->
+            <div
+              class="flex h-16 w-full items-center justify-center rounded-lg border"
+              [class]="theme.preview"
+            >
+              <i [class]="theme.icon" class="text-2xl" [class.text-gray-700]="theme.id === 'light'" [class.text-gray-300]="theme.id === 'dark'"></i>
+            </div>
+            <span class="text-sm font-medium text-(--text-primary)">{{ theme.label }}</span>
+            
+            <!-- Selected Indicator -->
+            @if (selectedTheme() === theme.id) {
+              <div class="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full" style="background: var(--color-primary)">
+                <i class="pi pi-check text-xs text-white"></i>
+              </div>
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Accent Color -->
+    <div>
+      <label class="mb-4 block text-sm font-medium text-(--text-primary)">Accent Color</label>
+      <div class="flex flex-wrap gap-3">
+        @for (color of accentColors; track color.value) {
+          <button
+            (click)="setAccentColor(color.value)"
+            class="group relative h-10 w-10 rounded-full transition-transform hover:scale-110"
+            [style.background]="color.value"
+            [title]="color.name"
+          >
+            @if (selectedAccent() === color.value) {
+              <div class="absolute inset-0 flex items-center justify-center">
+                <i class="pi pi-check text-white"></i>
+              </div>
+            }
+            <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-(--text-muted) opacity-0 transition-opacity group-hover:opacity-100">
+              {{ color.name }}
+            </span>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Language & Region -->
+  <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+    <h3 class="mb-6 text-lg font-semibold text-(--text-primary)">Language & Region</h3>
+
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <!-- Language -->
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-(--text-primary)">Language</label>
+        <p-select
+          [(ngModel)]="selectedLanguage"
+          [options]="languages"
+          optionLabel="label"
+          optionValue="value"
+          class="w-full"
+        >
+          <ng-template pTemplate="selectedItem" let-selected>
+            @if (selected) {
+              <span class="flex items-center gap-2">
+                <span>{{ selected.flag }}</span>
+                <span>{{ selected.label }}</span>
+              </span>
+            }
+          </ng-template>
+          <ng-template pTemplate="item" let-item>
+            <span class="flex items-center gap-2">
+              <span>{{ item.flag }}</span>
+              <span>{{ item.label }}</span>
+            </span>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <!-- Date Format -->
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-(--text-primary)">Date Format</label>
+        <p-select
+          [(ngModel)]="selectedDateFormat"
+          [options]="dateFormats"
+          optionLabel="label"
+          optionValue="value"
+          class="w-full"
+        >
+          <ng-template pTemplate="selectedItem" let-selected>
+            @if (selected) {
+              <span class="flex items-center justify-between gap-2">
+                <span>{{ selected.label }}</span>
+                <span class="text-(--text-muted)">{{ selected.example }}</span>
+              </span>
+            }
+          </ng-template>
+          <ng-template pTemplate="item" let-item>
+            <span class="flex items-center justify-between gap-2 w-full">
+              <span>{{ item.label }}</span>
+              <span class="text-(--text-muted)">{{ item.example }}</span>
+            </span>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <!-- Time Format -->
+      <div class="space-y-2 md:col-span-2">
+        <label class="block text-sm font-medium text-(--text-primary)">Time Format</label>
+        <div class="flex gap-4">
+          @for (format of timeFormats; track format.value) {
+            <label
+              class="flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition-all"
+              [class]="selectedTimeFormat() === format.value ? 'border-(--color-primary) bg-[color-mix(in_srgb,var(--color-primary)_5%,transparent)]' : 'border-(--border-default) bg-(--bg-muted) hover:border-(--border-default)'"
+            >
+              <p-radioButton
+                [value]="format.value"
+                [(ngModel)]="selectedTimeFormat"
+              />
+              <div>
+                <div class="font-medium text-(--text-primary)">{{ format.label }}</div>
+                <div class="text-sm text-(--text-muted)">{{ format.example }}</div>
+              </div>
+            </label>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Behavior -->
+  <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+    <h3 class="mb-6 text-lg font-semibold text-(--text-primary)">Behavior</h3>
+
+    <div class="space-y-4">
+      <div class="flex items-center justify-between rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+        <div>
+          <div class="font-medium text-(--text-primary)">Auto-refresh</div>
+          <div class="text-sm text-(--text-secondary)">Automatically update ticket lists and dashboard</div>
+        </div>
+        <p-toggleSwitch [(ngModel)]="autoRefresh" />
+      </div>
+
+      <div class="flex items-center justify-between rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+        <div>
+          <div class="font-medium text-(--text-primary)">Sound effects</div>
+          <div class="text-sm text-(--text-secondary)">Play sounds for notifications and actions</div>
+        </div>
+        <p-toggleSwitch [(ngModel)]="soundEffects" />
+      </div>
+
+      <div class="flex items-center justify-between rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+        <div>
+          <div class="font-medium text-(--text-primary)">Keyboard shortcuts</div>
+          <div class="text-sm text-(--text-secondary)">Enable keyboard shortcuts for quick navigation</div>
+        </div>
+        <p-toggleSwitch [(ngModel)]="keyboardShortcuts" />
+      </div>
+
+      <div class="flex items-center justify-between rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+        <div>
+          <div class="font-medium text-(--text-primary)">Compact mode</div>
+          <div class="text-sm text-(--text-secondary)">Reduce spacing and show more content</div>
+        </div>
+        <p-toggleSwitch [(ngModel)]="compactMode" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Accessibility -->
+  <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+    <div class="mb-6 flex items-center gap-3">
+      <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-(--bg-elevated)">
+        <i class="pi pi-eye text-(--text-secondary)"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold text-(--text-primary)">Accessibility</h3>
+        <p class="text-sm text-(--text-secondary)">Make Flashdesk easier to use</p>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <div class="flex items-center justify-between rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+        <div>
+          <div class="font-medium text-(--text-primary)">Reduce motion</div>
+          <div class="text-sm text-(--text-secondary)">Minimize animations and transitions</div>
+        </div>
+        <p-toggleSwitch [(ngModel)]="reducedMotion" />
+      </div>
+
+      <div class="flex items-center justify-between rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+        <div>
+          <div class="font-medium text-(--text-primary)">High contrast</div>
+          <div class="text-sm text-(--text-secondary)">Increase color contrast for better visibility</div>
+        </div>
+        <p-toggleSwitch [(ngModel)]="highContrast" />
+      </div>
+
+      <div class="flex items-center justify-between rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+        <div>
+          <div class="font-medium text-(--text-primary)">Large text</div>
+          <div class="text-sm text-(--text-secondary)">Increase font size throughout the app</div>
+        </div>
+        <p-toggleSwitch [(ngModel)]="largeText" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyboard Shortcuts Reference -->
+  <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+    <h3 class="mb-6 text-lg font-semibold text-(--text-primary)">Keyboard Shortcuts</h3>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div class="flex items-center justify-between">
+        <span class="text-(--text-secondary)">Global search</span>
+        <div class="flex gap-1">
+          <kbd class="rounded bg-(--kbd-bg) px-2 py-1 text-xs font-mono text-(--text-primary)">Ctrl</kbd>
+          <kbd class="rounded bg-(--kbd-bg) px-2 py-1 text-xs font-mono text-(--text-primary)">K</kbd>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-(--text-secondary)">New ticket</span>
+        <div class="flex gap-1">
+          <kbd class="rounded bg-(--kbd-bg) px-2 py-1 text-xs font-mono text-(--text-primary)">Ctrl</kbd>
+          <kbd class="rounded bg-(--kbd-bg) px-2 py-1 text-xs font-mono text-(--text-primary)">N</kbd>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-(--text-secondary)">Toggle sidebar</span>
+        <div class="flex gap-1">
+          <kbd class="rounded bg-(--kbd-bg) px-2 py-1 text-xs font-mono text-(--text-primary)">M</kbd>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-(--text-secondary)">Go to dashboard</span>
+        <div class="flex gap-1">
+          <kbd class="rounded bg-(--kbd-bg) px-2 py-1 text-xs font-mono text-(--text-primary)">G</kbd>
+          <kbd class="rounded bg-(--kbd-bg) px-2 py-1 text-xs font-mono text-(--text-primary)">D</kbd>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-(--text-secondary)">Go to tickets</span>
+        <div class="flex gap-1">
+          <kbd class="rounded bg-(--kbd-bg) px-2 py-1 text-xs font-mono text-(--text-primary)">G</kbd>
+          <kbd class="rounded bg-(--kbd-bg) px-2 py-1 text-xs font-mono text-(--text-primary)">T</kbd>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-(--text-secondary)">Toggle dark mode</span>
+        <div class="flex gap-1">
+          <kbd class="rounded bg-(--kbd-bg) px-2 py-1 text-xs font-mono text-(--text-primary)">Ctrl</kbd>
+          <kbd class="rounded bg-(--kbd-bg) px-2 py-1 text-xs font-mono text-(--text-primary)">Shift</kbd>
+          <kbd class="rounded bg-(--kbd-bg) px-2 py-1 text-xs font-mono text-(--text-primary)">L</kbd>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Button -->
+  <div class="flex justify-end gap-3">
+    <p-button
+      label="Reset to defaults"
+      severity="secondary"
+      [outlined]="true"
+    />
+    <p-button
+      label="Save Preferences"
+      icon="pi pi-check"
+      [loading]="isSaving()"
+      (onClick)="savePreferences()"
+    />
+  </div>
+</div>

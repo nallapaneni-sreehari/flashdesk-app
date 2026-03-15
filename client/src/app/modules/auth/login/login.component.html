@@ -1,0 +1,130 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="text-center lg:text-left">
+    <h2 class="text-2xl font-bold text-(--text-primary)">Welcome back</h2>
+    <p class="mt-2 text-(--text-secondary)">Sign in to your account to continue</p>
+  </div>
+
+  <!-- Error Message -->
+  @if (error()) {
+    <p-message severity="error" [text]="error()!" styleClass="w-full mb-2" />
+  }
+
+  <!-- SSO Buttons -->
+  <div class="space-y-3">
+    @for (provider of ssoProviders; track provider.id) {
+      <button
+        type="button"
+        (click)="onSSOLogin(provider.id)"
+        [disabled]="isLoading() || ssoLoadingProvider() !== null"
+        class="flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        [ngClass]="provider.color"
+      >
+        @if (ssoLoadingProvider() === provider.id) {
+          <i class="pi pi-spinner pi-spin"></i>
+        } @else {
+          <i [class]="provider.icon"></i>
+        }
+        <span>Continue with {{ provider.name }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- Divider -->
+  <div class="relative">
+    <div class="absolute inset-0 flex items-center">
+      <div class="w-full border-t border-(--border-default)"></div>
+    </div>
+    <div class="relative flex justify-center text-sm">
+      <span class="bg-(--bg-base) px-4 text-(--text-muted)">or continue with email</span>
+    </div>
+  </div>
+
+  <!-- Login Form -->
+  <form (ngSubmit)="onSubmit()" class="space-y-5">
+    <!-- Email -->
+    <div class="space-y-2">
+      <label for="email" class="block text-sm font-medium text-(--text-primary)">Email address</label>
+      <input
+        pInputText
+        id="email"
+        type="email"
+        [(ngModel)]="email"
+        name="email"
+        placeholder="you@example.com"
+        class="w-full"
+        autocomplete="email"
+        [disabled]="isLoading()"
+      />
+    </div>
+
+    <!-- Password -->
+    <div class="space-y-2">
+      <div class="flex items-center justify-between">
+        <label for="password" class="block text-sm font-medium text-(--text-primary)">Password</label>
+        <a href="#" class="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+          Forgot password?
+        </a>
+      </div>
+      <div class="relative">
+        <input
+          pInputText
+          id="password"
+          [type]="showPassword() ? 'text' : 'password'"
+          [(ngModel)]="password"
+          name="password"
+          placeholder="Enter your password"
+          class="w-full pr-10"
+          autocomplete="current-password"
+          [disabled]="isLoading()"
+        />
+        <button
+          type="button"
+          (click)="togglePasswordVisibility()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-(--text-muted) hover:text-(--text-primary) transition-colors"
+        >
+          <i [class]="showPassword() ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Remember Me -->
+    <div class="flex items-center gap-2">
+      <p-checkbox
+        [(ngModel)]="rememberMe"
+        name="rememberMe"
+        [binary]="true"
+        inputId="rememberMe"
+      />
+      <label for="rememberMe" class="text-sm text-(--text-secondary) cursor-pointer">
+        Remember me for 30 days
+      </label>
+    </div>
+
+    <!-- Submit Button -->
+    <p-button
+      type="submit"
+      label="Sign in"
+      styleClass="w-full"
+      [loading]="isLoading() && !ssoLoadingProvider()"
+      [disabled]="!email || !password || isLoading()"
+    />
+  </form>
+
+  <!-- Demo Credentials -->
+  <div class="rounded-lg border border-(--border-default) bg-(--bg-muted) p-4">
+    <p class="text-sm font-medium text-(--text-primary) mb-2">Demo Credentials</p>
+    <div class="space-y-1 text-sm text-(--text-secondary)">
+      <p><span class="font-medium">Admin:</span> amy&#64;flashdesk.io / password123</p>
+      <p><span class="font-medium">Agent:</span> anna&#64;flashdesk.io / password123</p>
+    </div>
+  </div>
+
+  <!-- Sign Up Link -->
+  <p class="text-center text-sm text-(--text-secondary)">
+    Don't have an account?
+    <a href="#" class="font-medium text-primary hover:text-primary/80 transition-colors">
+      Contact sales
+    </a>
+  </p>
+</div>

@@ -1,0 +1,169 @@
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '700px', maxWidth: '95vw' }"
+  [contentStyle]="{ 'max-height': '80vh', 'overflow-y': 'auto' }"
+  (onHide)="onHide()"
+  [closable]="true"
+  [draggable]="false"
+>
+  <div class="space-y-6">
+    <!-- Basic Info -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <!-- Title -->
+      <div class="sm:col-span-2">
+        <label class="mb-2 block text-sm font-medium text-(--text-primary)">
+          Title <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="title"
+          placeholder="e.g., Welcome Greeting"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Shortcut -->
+      <div>
+        <label class="mb-2 flex items-center gap-2 text-sm font-medium text-(--text-primary)">
+          Shortcut <span class="text-red-500">*</span>
+          <i
+            class="pi pi-info-circle text-xs text-(--text-muted)"
+            pTooltip="Type this in the reply editor to quickly insert this template"
+            tooltipPosition="top"
+          ></i>
+        </label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="shortcut"
+          (ngModelChange)="validateShortcut()"
+          placeholder="/shortcut"
+          class="w-full font-mono"
+          [class.ng-invalid]="shortcutError()"
+          [class.ng-dirty]="shortcutError()"
+        />
+        @if (shortcutError()) {
+          <small class="mt-1 block text-red-500">{{ shortcutError() }}</small>
+        } @else {
+          <small class="mt-1 block text-(--text-muted)">
+            Must start with / and contain only letters, numbers, _, or -
+          </small>
+        }
+      </div>
+
+      <!-- Category -->
+      <div>
+        <label class="mb-2 block text-sm font-medium text-(--text-primary)">
+          Category <span class="text-red-500">*</span>
+        </label>
+        <p-select
+          [options]="categoryOptions"
+          [(ngModel)]="categoryId"
+          placeholder="Select a category"
+          styleClass="w-full"
+        >
+          <ng-template pTemplate="selectedItem" let-selected>
+            @if (selected) {
+              <div class="flex items-center gap-2">
+                <i [class]="selected.icon" [style.color]="selected.color"></i>
+                <span>{{ selected.label }}</span>
+              </div>
+            }
+          </ng-template>
+          <ng-template pTemplate="item" let-option>
+            <div class="flex items-center gap-2">
+              <i [class]="option.icon" [style.color]="option.color"></i>
+              <span>{{ option.label }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+    </div>
+
+    <!-- Content Editor -->
+    <div>
+      <label class="mb-2 block text-sm font-medium text-(--text-primary)">
+        Content <span class="text-red-500">*</span>
+      </label>
+      <div class="ticket-editor-wrapper">
+        <p-editor
+          [(ngModel)]="content"
+          [style]="{ height: '250px' }"
+          placeholder="Write your template content here..."
+        >
+          <ng-template pTemplate="header">
+            <span class="ql-formats">
+              <button type="button" class="ql-bold" aria-label="Bold"></button>
+              <button type="button" class="ql-italic" aria-label="Italic"></button>
+              <button type="button" class="ql-underline" aria-label="Underline"></button>
+            </span>
+            <span class="ql-formats">
+              <button type="button" class="ql-list" value="ordered" aria-label="Ordered List"></button>
+              <button type="button" class="ql-list" value="bullet" aria-label="Bullet List"></button>
+            </span>
+            <span class="ql-formats">
+              <button type="button" class="ql-link" aria-label="Link"></button>
+            </span>
+          </ng-template>
+        </p-editor>
+      </div>
+    </div>
+
+    <!-- Placeholders -->
+    <div class="rounded-xl border border-(--border-default) bg-(--bg-elevated) p-4">
+      <div class="mb-3 flex items-center gap-2">
+        <i class="pi pi-code text-(--text-muted)"></i>
+        <span class="text-sm font-medium text-(--text-primary)">Available Placeholders</span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        @for (ph of placeholders; track ph.name) {
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-(--border-default) bg-(--bg-surface) px-2.5 py-1.5 text-xs font-mono text-(--text-secondary) transition-colors hover:bg-(--hover-bg) hover:text-(--text-primary)"
+            (click)="insertPlaceholder(ph.name)"
+            [pTooltip]="ph.description"
+            tooltipPosition="top"
+          >
+            <i class="pi pi-plus text-[10px]"></i>
+            {{ ph.name }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <p-divider />
+
+    <!-- Sharing Options -->
+    <div class="flex items-center justify-between">
+      <div>
+        <label class="block text-sm font-medium text-(--text-primary)">
+          Share with Team
+        </label>
+        <p class="mt-1 text-xs text-(--text-muted)">
+          Allow other agents to use this template
+        </p>
+      </div>
+      <p-toggleSwitch [(ngModel)]="isShared" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-3">
+      <p-button
+        label="Cancel"
+        severity="secondary"
+        [text]="true"
+        (onClick)="onCancel()"
+      />
+      <p-button
+        [label]="isEditing ? 'Save Changes' : 'Create Template'"
+        icon="pi pi-check"
+        [disabled]="!isValid"
+        (onClick)="onSave()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,1070 @@
+@if (ticket(); as t) {
+<div class="flex flex-col" style="height: calc(100vh - 8rem);">
+
+    <!-- Header -->
+    <div class="border border-(--border-default) bg-(--bg-surface) px-4 py-3 lg:px-6 lg:py-4 rounded-md">
+        <!-- Mobile/Tablet Layout (< lg) -->
+        <div class="lg:hidden space-y-3">
+            <!-- Row 1: Navigation + Actions -->
+            <div class="flex items-center justify-between">
+                <!-- Left: Navigation controls -->
+                <div class="flex items-center gap-1">
+                    <p-button icon="pi pi-list" [rounded]="true" [text]="true" severity="secondary" size="small"
+                        (onClick)="toggleTicketDrawer()" pTooltip="Browse tickets (B T)" tooltipPosition="bottom" />
+                    <div class="h-5 w-px bg-(--border-default) mx-1"></div>
+                    <p-button icon="pi pi-chevron-left" [rounded]="true" [text]="true" severity="secondary" size="small"
+                        (onClick)="navigateToPreviousTicket()" 
+                        [disabled]="!previousTicket()" />
+                    <span class="text-xs text-(--text-muted) min-w-10 text-center">{{ ticketNavInfo() }}</span>
+                    <p-button icon="pi pi-chevron-right" [rounded]="true" [text]="true" severity="secondary" size="small"
+                        (onClick)="navigateToNextTicket()" 
+                        [disabled]="!nextTicket()" />
+                </div>
+                
+                <!-- Right: Action buttons (icon only on mobile) -->
+                <div class="flex items-center gap-1">
+                    @if (hasUnsavedChanges()) {
+                    <span class="text-[10px] font-medium text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                        <i class="pi pi-circle-fill text-[5px]"></i>
+                        <span class="hidden sm:inline">Unsaved</span>
+                    </span>
+                    }
+                    <p-button icon="pi pi-save" [rounded]="true" [text]="true" severity="secondary" size="small"
+                        [disabled]="!hasUnsavedChanges()" (onClick)="saveAllChanges()" 
+                        pTooltip="Save changes" tooltipPosition="bottom" />
+                    <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success" size="small"
+                        (onClick)="resolveTicket()" pTooltip="Resolve" tooltipPosition="bottom" />
+                    <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" severity="secondary" size="small"
+                        (onClick)="toggleMoreMenu($event)" />
+                    <p-menu #moreMenuMobile [model]="moreMenuItems" [popup]="true" styleClass="w-56" />
+                </div>
+            </div>
+            
+            <!-- Row 2: Ticket ID + Badges -->
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="font-mono text-sm font-medium" style="color: var(--color-primary)">{{ t.ticketPrefix || 'TKT' }}-{{ t.ticketNumber }}</span>
+                <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                    [ngClass]="[ticketType().bg, ticketType().color]">
+                    <i [class]="ticketType().icon + ' text-[10px]'"></i>
+                    {{ ticketType().label }}
+                </span>
+                <div class="flex items-center gap-1">
+                    @switch (t.priority) {
+                    @case ('urgent') {
+                    <i class="pi pi-angle-double-up text-base text-red-600"></i>
+                    <span class="text-xs text-red-600">Urgent</span>
+                    }
+                    @case ('high') {
+                    <i class="pi pi-angle-up text-base text-orange-500"></i>
+                    <span class="text-xs text-orange-500">High</span>
+                    }
+                    @case ('medium') {
+                    <i class="pi pi-minus text-sm text-yellow-500"></i>
+                    <span class="text-xs text-yellow-500">Medium</span>
+                    }
+                    @case ('low') {
+                    <i class="pi pi-angle-down text-base text-blue-500"></i>
+                    <span class="text-xs text-blue-500">Low</span>
+                    }
+                    }
+                </div>
+            </div>
+            
+            <!-- Row 3: Subject -->
+            <h1 class="text-base font-semibold text-(--text-primary) line-clamp-2">{{ t.subject }}</h1>
+        </div>
+        
+        <!-- Desktop Layout (lg+) -->
+        <div class="hidden lg:block">
+            <!-- Row 1: Navigation + Actions -->
+            <div class="flex items-center justify-between gap-4">
+                <!-- Left: Navigation + Ticket Info -->
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                    <!-- Ticket List Toggle -->
+                    <p-button icon="pi pi-list" [rounded]="true" [text]="true" severity="secondary"
+                        (onClick)="toggleTicketDrawer()" pTooltip="Browse tickets" tooltipPosition="bottom" />
+                    
+                    <!-- Separator -->
+                    <div class="h-6 w-px bg-(--border-default)"></div>
+                    
+                    <!-- Prev/Next Navigation -->
+                    <div class="flex items-center gap-1 shrink-0">
+                        <p-button icon="pi pi-chevron-left" [rounded]="true" [text]="true" severity="secondary"
+                            (onClick)="navigateToPreviousTicket()" 
+                            [disabled]="!previousTicket()"
+                            pTooltip="Previous ticket" tooltipPosition="bottom" />
+                        <span class="text-xs text-(--text-muted) min-w-12 text-center">{{ ticketNavInfo() }}</span>
+                        <p-button icon="pi pi-chevron-right" [rounded]="true" [text]="true" severity="secondary"
+                            (onClick)="navigateToNextTicket()" 
+                            [disabled]="!nextTicket()"
+                            pTooltip="Next ticket" tooltipPosition="bottom" />
+                    </div>
+                    
+                    <!-- Separator -->
+                    <div class="h-6 w-px bg-(--border-default)"></div>
+                    
+                    <!-- Ticket ID + Badges -->
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="font-mono text-sm font-medium shrink-0" style="color: var(--color-primary)">
+                            {{ t.ticketPrefix || 'TKT' }}-{{ t.ticketNumber }}
+                        </span>
+                        <!-- Ticket Type Badge -->
+                        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium shrink-0"
+                            [ngClass]="[ticketType().bg, ticketType().color]">
+                            <i [class]="ticketType().icon + ' text-[10px]'"></i>
+                            {{ ticketType().label }}
+                        </span>
+                        <div class="flex items-center gap-1 shrink-0" [pTooltip]="(t.priority | titlecase)"
+                            tooltipPosition="top">
+                            @switch (t.priority) {
+                            @case ('urgent') {
+                            <i class="pi pi-angle-double-up text-lg text-red-600"></i>
+                            <span class="text-xs text-red-600">Urgent</span>
+                            }
+                            @case ('high') {
+                            <i class="pi pi-angle-up text-lg text-orange-500"></i>
+                            <span class="text-xs text-orange-500">High</span>
+                            }
+                            @case ('medium') {
+                            <i class="pi pi-minus text-base text-yellow-500"></i>
+                            <span class="text-xs text-yellow-500">Medium</span>
+                            }
+                            @case ('low') {
+                            <i class="pi pi-angle-down text-lg text-blue-500"></i>
+                            <span class="text-xs text-blue-500">Low</span>
+                            }
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Actions -->
+                <div class="flex items-center justify-end gap-2 shrink-0">
+                    @if (hasUnsavedChanges()) {
+                    <span class="text-xs font-medium text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                        <i class="pi pi-circle-fill text-[6px]"></i>
+                        Unsaved changes
+                    </span>
+                    }
+                    <p-button label="Update" icon="pi pi-save" [disabled]="!hasUnsavedChanges()"
+                        (onClick)="saveAllChanges()" size="small" />
+                    <p-button label="Resolve" icon="pi pi-check" severity="success" [outlined]="true"
+                        (onClick)="resolveTicket()" size="small" />
+                    <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" severity="secondary" 
+                        (onClick)="toggleMoreMenu($event)" pTooltip="More options" tooltipPosition="bottom" />
+                    <p-menu #moreMenu [model]="moreMenuItems" [popup]="true" styleClass="w-56" />
+                </div>
+            </div>
+            
+            <!-- Row 2: Subject + Workflow Pills -->
+            <div class="flex items-center justify-between gap-4 mt-4">
+                <h1 class="text-lg font-semibold text-(--text-primary) truncate min-w-0 flex-1">{{ t.subject }}</h1>
+                
+                <!-- Workflow Pills (Desktop - inline) -->
+                <div class="flex items-center shrink-0">
+                    <div class="flex items-center gap-1">
+                        @for (step of workflowSteps; track step.value; let i = $index; let last = $last) {
+                        <button (click)="updateStatus(step.value)"
+                            class="relative flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-all duration-200 border"
+                            [class]="i === currentStepIndex() 
+                                ? 'text-white border-transparent shadow-sm' 
+                                : i < currentStepIndex() 
+                                    ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/40' 
+                                    : 'bg-(--bg-elevated) text-(--text-muted) border-(--border-default) hover:bg-(--hover-bg) hover:text-(--text-secondary)'"
+                            [style]="i === currentStepIndex() ? 'background-color: var(--color-primary);' : ''">
+                            @if (i < currentStepIndex()) {
+                            <i class="pi pi-check text-[10px]"></i>
+                            }
+                            {{ step.label }}
+                        </button>
+                        @if (!last) {
+                        <div class="h-px w-3"
+                             [class]="i < currentStepIndex() ? 'bg-green-400 dark:bg-green-600' : 'bg-(--border-default)'"></div>
+                        }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Workflow Progress Bar (Mobile/Tablet only) -->
+    <div class="lg:hidden mt-1 border border-(--border-default) bg-(--bg-surface) px-4 py-3 rounded-md">
+        <div class="flex items-center gap-4">
+            <span class="text-xs font-medium text-(--text-muted) uppercase tracking-wider shrink-0 hidden sm:block">Status</span>
+            <div class="flex-1 flex items-center overflow-x-auto">
+                <div class="flex items-center gap-1 sm:gap-2">
+                    @for (step of workflowSteps; track step.value; let i = $index; let last = $last) {
+                    <button (click)="updateStatus(step.value)"
+                        class="relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-200 border"
+                        [class]="i === currentStepIndex() 
+                            ? 'text-white border-transparent shadow-md scale-105' 
+                            : i < currentStepIndex() 
+                                ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/40' 
+                                : 'bg-(--bg-elevated) text-(--text-muted) border-(--border-default) hover:bg-(--hover-bg) hover:text-(--text-secondary)'"
+                        [style]="i === currentStepIndex() ? 'background-color: var(--color-primary);' : ''">
+                        @if (i < currentStepIndex()) {
+                        <i class="pi pi-check-circle text-xs"></i>
+                        } @else if (i === currentStepIndex()) {
+                        <i class="pi pi-circle-fill text-[8px] animate-pulse"></i>
+                        } @else {
+                        <i class="pi pi-circle text-[10px]"></i>
+                        }
+                        {{ step.label }}
+                    </button>
+                    @if (!last) {
+                    <div class="h-px w-4 sm:w-8"
+                         [class]="i < currentStepIndex() ? 'bg-green-400 dark:bg-green-600' : 'bg-(--border-default)'"></div>
+                    }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex flex-1 overflow-hidden mt-1 gap-1">
+        <!-- Conversation Panel -->
+        <div class="flex flex-1 flex-col overflow-hidden rounded-md bg-(--bg-surface) border border-(--border-default)">
+            <!-- Tabs -->
+            <div class="border-b border-(--border-default) bg-(--bg-surface) px-6 rounded-t-md">
+                <div class="flex gap-6">
+                    <button (click)="activeTab.set(0)" class="relative py-3 text-sm font-medium transition-colors"
+                        [class]="activeTab() === 0 ? 'text-(--text-primary)' : 'text-(--text-secondary) hover:text-(--text-primary)'">
+                        Details
+                        @if (pendingDescription() !== null && pendingDescription() !== t.description) {
+                        <span class="ml-1 text-amber-600 dark:text-amber-400">*</span>
+                        }
+                        @if (activeTab() === 0) {
+                        <span class="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
+                            style="background: var(--color-primary)"></span>
+                        }
+                    </button>
+                    <button (click)="activeTab.set(1)" class="relative py-3 text-sm font-medium transition-colors"
+                        [class]="activeTab() === 1 ? 'text-(--text-primary)' : 'text-(--text-secondary) hover:text-(--text-primary)'">
+                        Conversation
+                        <span class="ml-2 rounded-full bg-(--bg-elevated) px-2 py-0.5 text-xs">{{
+                            publicMessages().length }}</span>
+                        @if (activeTab() === 1) {
+                        <span class="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
+                            style="background: var(--color-primary)"></span>
+                        }
+                    </button>
+                    <button (click)="activeTab.set(2)" class="relative py-3 text-sm font-medium transition-colors"
+                        [class]="activeTab() === 2 ? 'text-(--text-primary)' : 'text-(--text-secondary) hover:text-(--text-primary)'">
+                        Internal Notes
+                        <span class="ml-2 rounded-full bg-(--bg-elevated) px-2 py-0.5 text-xs">{{ internalNotes().length
+                            }}</span>
+                        @if (activeTab() === 2) {
+                        <span class="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
+                            style="background: var(--color-primary)"></span>
+                        }
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="flex-1 overflow-y-auto p-6 min-h-0">
+                @if (activeTab() === 0) {
+                <!-- Details Tab Content -->
+                <div class="w-full space-y-6">
+
+                    <!-- Quick Stats Strip -->
+                    <div class="flex flex-wrap items-center gap-x-1 gap-y-2 rounded-xl border border-(--border-default) bg-(--bg-surface) px-4 py-3">
+                        <!-- Created -->
+                        <div class="flex items-center gap-2 px-2 py-1">
+                            <i class="pi pi-calendar text-sm text-blue-500"></i>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-xs text-(--text-muted)">Created</span>
+                                <span class="text-sm font-medium text-(--text-primary)">{{ formatDate(t.createdAt) }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="h-4 w-px bg-(--border-default)"></div>
+                        
+                        <!-- Updated -->
+                        <div class="flex items-center gap-2 px-2 py-1">
+                            <i class="pi pi-refresh text-sm text-gray-500"></i>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-xs text-(--text-muted)">Updated</span>
+                                <span class="text-sm font-medium text-(--text-primary)">{{ formatRelativeDate(t.updatedAt) }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="h-4 w-px bg-(--border-default)"></div>
+                        
+                        <!-- First Response SLA -->
+                        <div class="flex items-center gap-2 px-2 py-1 rounded-lg transition-colors"
+                             [class]="firstResponseStatus().status === 'breached' ? 'bg-red-50 dark:bg-red-900/20' : 
+                                      firstResponseStatus().status === 'warning' ? 'bg-amber-50 dark:bg-amber-900/20' : 
+                                      firstResponseStatus().status === 'met' ? 'bg-green-50 dark:bg-green-900/20' : ''">
+                            <i class="pi pi-reply text-sm"
+                               [class]="firstResponseStatus().status === 'met' ? 'text-green-500' : 
+                                        firstResponseStatus().status === 'breached' ? 'text-red-500' :
+                                        firstResponseStatus().status === 'warning' ? 'text-amber-500' : 'text-indigo-500'"></i>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-xs text-(--text-muted)">1st Response</span>
+                                <span class="text-sm font-medium"
+                                      [class]="firstResponseStatus().status === 'met' ? 'text-green-600 dark:text-green-400' : 
+                                               firstResponseStatus().status === 'breached' ? 'text-red-600 dark:text-red-400' :
+                                               firstResponseStatus().status === 'warning' ? 'text-amber-600 dark:text-amber-400' : 'text-(--text-primary)'">
+                                    {{ firstResponseStatus().label }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="h-4 w-px bg-(--border-default)"></div>
+                        
+                        <!-- Resolution SLA -->
+                        <div class="flex items-center gap-2 px-2 py-1 rounded-lg transition-colors"
+                             [class]="resolutionStatus().status === 'breached' ? 'bg-red-50 dark:bg-red-900/20' : 
+                                      resolutionStatus().status === 'warning' ? 'bg-amber-50 dark:bg-amber-900/20' : 
+                                      resolutionStatus().status === 'met' ? 'bg-green-50 dark:bg-green-900/20' : ''">
+                            <i class="pi pi-clock text-sm"
+                               [class]="resolutionStatus().status === 'met' ? 'text-green-500' : 
+                                        resolutionStatus().status === 'breached' ? 'text-red-500' :
+                                        resolutionStatus().status === 'warning' ? 'text-amber-500' : 'text-purple-500'"></i>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-xs text-(--text-muted)">Resolution</span>
+                                <span class="text-sm font-medium"
+                                      [class]="resolutionStatus().status === 'met' ? 'text-green-600 dark:text-green-400' : 
+                                               resolutionStatus().status === 'breached' ? 'text-red-600 dark:text-red-400' :
+                                               resolutionStatus().status === 'warning' ? 'text-amber-600 dark:text-amber-400' : 'text-(--text-primary)'">
+                                    {{ resolutionStatus().label }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="h-4 w-px bg-(--border-default)"></div>
+                        
+                        <!-- Source -->
+                        <div class="flex items-center gap-2 px-2 py-1">
+                            <i [class]="channelIcon() + ' text-sm text-cyan-500'"></i>
+                            <span class="text-sm font-medium text-(--text-primary)">{{ channelLabel() }}</span>
+                        </div>
+                        
+                        <div class="h-4 w-px bg-(--border-default)"></div>
+                        
+                        <!-- Notes -->
+                        <div class="flex items-center gap-2 px-2 py-1">
+                            <i class="pi pi-file-edit text-sm text-amber-500"></i>
+                            <span class="text-sm font-medium text-(--text-primary)">{{ internalNotes().length }} notes</span>
+                        </div>
+                    </div>
+
+                    <!-- Description Section -->
+                    <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) overflow-hidden">
+                        @if (isEditingDescription()) {
+                        <!-- Editor Mode -->
+                        <div
+                            class="flex items-center justify-between border-b border-(--border-default) bg-(--bg-elevated) px-5 py-3">
+                            <div class="flex items-center gap-2">
+                                <i class="pi pi-pencil text-(--text-muted)"></i>
+                                <h4 class="text-sm font-semibold text-(--text-primary)">Editing Description</h4>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <p-button label="Cancel" [text]="true" severity="secondary" size="small"
+                                    (onClick)="cancelDescriptionEdit()" />
+                                <p-button label="Save Changes" icon="pi pi-check" size="small"
+                                    (onClick)="saveDescription()"
+                                    [disabled]="pendingDescription() === null || pendingDescription() === t.description" />
+                            </div>
+                        </div>
+                        <div class="ticket-editor-wrapper">
+                            <p-editor [ngModel]="pendingDescription() ?? t.description"
+                                (ngModelChange)="updateDescription($event)" [style]="{ height: '400px' }" />
+                        </div>
+                        } @else {
+                        <!-- Read-only Mode -->
+                        <div
+                            class="flex items-center justify-between border-b border-(--border-default) bg-(--bg-elevated) px-5 py-3">
+                            <div class="flex items-center gap-2">
+                                <i class="pi pi-file-edit text-(--text-muted)"></i>
+                                <h4 class="text-sm font-semibold text-(--text-primary)">Description</h4>
+                            </div>
+                            <p-button label="Edit" icon="pi pi-pencil" [text]="true" size="small"
+                                (onClick)="startEditingDescription()" />
+                        </div>
+                        <div class="p-6">
+                            <div class="prose prose-sm max-w-none text-(--text-primary)"
+                                [innerHTML]="sanitizeHtml(t.description)"></div>
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Activity History Accordion -->
+                    <p-accordion class="history-accordion" [value]="activeHistoryPanel()"
+                        (valueChange)="onHistoryAccordionChange($any($event))">
+                        <p-accordionpanel value="history">
+                            <p-accordionheader>
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-history"></i>
+                                    <span class="font-semibold">Activity History</span>
+                                    @if (historyLoaded()) {
+                                    <span
+                                        class="ml-2 rounded-full bg-(--bg-elevated) px-2 py-0.5 text-xs font-medium text-(--text-secondary)">{{
+                                        history().length }} events</span>
+                                    }
+                                </div>
+                            </p-accordionheader>
+                            <p-accordioncontent>
+                                @if (historyLoading()) {
+                                <!-- Loading state -->
+                                <div class="flex items-center justify-center py-8">
+                                    <i class="pi pi-spin pi-spinner text-2xl text-(--text-muted)"></i>
+                                    <span class="ml-2 text-sm text-(--text-secondary)">Loading activity
+                                        history...</span>
+                                </div>
+                                } @else if (history().length === 0) {
+                                <!-- Empty state -->
+                                <div class="flex flex-col items-center justify-center py-8 text-center">
+                                    <i class="pi pi-history text-3xl text-(--text-muted)"></i>
+                                    <p class="mt-2 text-sm text-(--text-secondary)">No activity recorded yet</p>
+                                </div>
+                                } @else {
+                                <!-- Timeline -->
+                                <div class="relative py-2">
+                                    <!-- Timeline line -->
+                                    <div class="absolute left-4.5 top-4 bottom-4 w-0.5 bg-(--border-default)"></div>
+
+                                    <!-- Timeline items -->
+                                    <div class="space-y-4">
+                                        @for (event of history(); track event.id) {
+                                        <div class="relative flex gap-4 pl-10">
+                                            <!-- Timeline dot -->
+                                            <div class="absolute left-0 flex h-9 w-9 items-center justify-center rounded-full"
+                                                [ngClass]="getHistoryColor(event.type)">
+                                                <i [class]="getHistoryIcon(event.type) + ' text-sm'"></i>
+                                            </div>
+
+                                            <!-- Content -->
+                                            <div
+                                                class="flex-1 rounded-lg border border-(--border-default) bg-(--bg-base) p-3 hover:bg-(--hover-bg) transition-colors">
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm text-(--text-primary)">
+                                                            <span class="font-medium">{{ event.user.name }}</span>
+                                                            <span class="text-(--text-secondary)"> {{ event.description
+                                                                }}</span>
+                                                        </p>
+                                                        @if (event.details) {
+                                                        <p class="mt-1 text-xs text-(--text-muted)">
+                                                            @if (event.details.from) {
+                                                            <span class="inline-flex items-center gap-1">
+                                                                <span
+                                                                    class="rounded bg-(--bg-elevated) px-1.5 py-0.5">{{
+                                                                    event.details.from }}</span>
+                                                                <i class="pi pi-arrow-right text-[10px]"></i>
+                                                                <span
+                                                                    class="rounded bg-(--bg-elevated) px-1.5 py-0.5">{{
+                                                                    event.details.to }}</span>
+                                                            </span>
+                                                            } @else if (event.details.to) {
+                                                            <span class="rounded bg-(--bg-elevated) px-1.5 py-0.5">{{
+                                                                event.details.to }}</span>
+                                                            }
+                                                        </p>
+                                                        }
+                                                    </div>
+                                                    <span class="shrink-0 text-xs text-(--text-muted)">{{
+                                                        formatRelativeDate(event.timestamp) }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        }
+                                    </div>
+                                </div>
+                                }
+                            </p-accordioncontent>
+                        </p-accordionpanel>
+                    </p-accordion>
+
+                </div>
+                } @else {
+                <!-- Conversation / Internal Notes Tab Content - Thread View -->
+                <div class="space-y-0">
+                    @for (message of (activeTab() === 1 ? publicMessages() : internalNotes()); track message.id; let first = $first; let last = $last) {
+                    <!-- Thread Message -->
+                    <div class="group relative">
+                        <!-- Timeline Connector -->
+                        @if (!first) {
+                        <div class="absolute left-5 -top-3 h-3 w-0.5 bg-(--border-default)"></div>
+                        }
+                        @if (!last) {
+                        <div class="absolute left-5 top-10 bottom-0 w-0.5 bg-(--border-default)"></div>
+                        }
+                        
+                        <!-- Message Card -->
+                        <div class="flex gap-4 py-4 px-2 rounded-lg transition-colors hover:bg-(--hover-bg)">
+                            <!-- Avatar -->
+                            <div class="relative shrink-0">
+                                @if (message.author.avatar) {
+                                <p-avatar [image]="message.author.avatar" shape="circle" 
+                                    [style]="{ width: '2.5rem', height: '2.5rem' }" />
+                                } @else {
+                                <p-avatar [label]="message.author.name.charAt(0)" shape="circle"
+                                    [style]="{ width: '2.5rem', height: '2.5rem', 'background-color': message.author.type === 'customer' ? 'var(--color-tertiary)' : message.author.type === 'system' ? '#6b7280' : 'var(--color-secondary)', 'color': message.author.type === 'customer' ? 'var(--color-primary)' : '#ffffff', 'font-size': '0.875rem' }" />
+                                }
+                            </div>
+                            
+                            <!-- Message Content -->
+                            <div class="flex-1 min-w-0">
+                                <!-- Header -->
+                                <div class="flex items-center justify-between gap-4 mb-2">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="font-semibold text-sm text-(--text-primary)">{{ message.author.name }}</span>
+                                        @if (message.author.type === 'customer') {
+                                        <span class="rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
+                                            Customer
+                                        </span>
+                                        } @else if (message.author.type === 'agent') {
+                                        <span class="rounded-full bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wider">
+                                            Agent
+                                        </span>
+                                        } @else if (message.author.type === 'system') {
+                                        <span class="rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-[10px] font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                                            System
+                                        </span>
+                                        }
+                                        @if (message.isInternal) {
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300 uppercase tracking-wider">
+                                            <i class="pi pi-lock text-[8px]"></i>
+                                            Internal
+                                        </span>
+                                        }
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <span class="text-xs text-(--text-muted)" [pTooltip]="formatDate(message.createdAt)" tooltipPosition="top">
+                                            {{ formatRelativeDate(message.createdAt) }}
+                                        </span>
+                                        <!-- Actions (visible on hover) -->
+                                        <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button class="flex items-center justify-center w-7 h-7 rounded-md text-(--text-muted) hover:text-(--text-primary) hover:bg-(--bg-elevated) transition-colors"
+                                                pTooltip="Copy" tooltipPosition="top">
+                                                <i class="pi pi-copy text-xs"></i>
+                                            </button>
+                                            @if (message.author.type === 'customer') {
+                                            <button class="flex items-center justify-center w-7 h-7 rounded-md text-(--text-muted) hover:text-(--text-primary) hover:bg-(--bg-elevated) transition-colors"
+                                                pTooltip="Quote reply" tooltipPosition="top">
+                                                <i class="pi pi-reply text-xs"></i>
+                                            </button>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Message Body -->
+                                <div class="rounded-lg p-3 text-sm leading-relaxed"
+                                     [class]="message.isInternal 
+                                        ? 'bg-amber-50 dark:bg-amber-900/20 border border-dashed border-amber-200 dark:border-amber-800 text-(--text-primary)' 
+                                        : message.author.type === 'customer'
+                                            ? 'bg-(--bg-elevated) text-(--text-primary)'
+                                            : 'bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 text-(--text-primary)'">
+                                    <p class="whitespace-pre-wrap">{{ message.content }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    }
+
+                    @if ((activeTab() === 1 ? publicMessages() : internalNotes()).length === 0) {
+                    <div class="flex flex-col items-center justify-center py-16 text-center">
+                        <div class="flex h-16 w-16 items-center justify-center rounded-full bg-(--bg-elevated) mb-4">
+                            <i class="pi pi-comments text-2xl text-(--text-muted)"></i>
+                        </div>
+                        <p class="text-base font-medium text-(--text-primary)">No {{ activeTab() === 1 ? 'messages' : 'internal notes' }} yet</p>
+                        <p class="mt-1 text-sm text-(--text-secondary)">
+                            {{ activeTab() === 1 ? 'Start the conversation with the customer' : 'Add internal notes visible only to your team' }}
+                        </p>
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+
+            <!-- Reply Box (only for Conversation and Internal Notes tabs) -->
+            @if (activeTab() !== 0) {
+            <div class="border-t border-(--border-default) bg-(--bg-surface) p-4 rounded-b-md">
+                <div class="mx-auto">
+                    <div class="relative rounded-xl border border-(--border-default) bg-(--bg-base) p-2">
+                        <!-- Shortcut Suggestions Dropdown -->
+                        @if (showShortcutSuggestions() && shortcutSuggestions().length > 0) {
+                        <div class="absolute bottom-full left-0 z-50 mb-2 w-80 overflow-hidden rounded-xl border border-(--border-default) bg-(--bg-surface) shadow-lg">
+                            <div class="border-b border-(--border-muted) px-3 py-2">
+                                <span class="text-xs font-medium text-(--text-muted)">Templates matching "{{ currentShortcut() }}"</span>
+                            </div>
+                            <div class="max-h-60 overflow-y-auto">
+                                @for (template of shortcutSuggestions(); track template.id; let i = $index) {
+                                <button
+                                    (click)="selectShortcutSuggestion(template)"
+                                    class="block w-full px-3 py-2 text-left transition-colors"
+                                    [class]="i === selectedSuggestionIndex() ? 'bg-(--color-primary) text-white' : 'hover:bg-(--hover-bg)'"
+                                >
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-medium" [class]="i === selectedSuggestionIndex() ? 'text-white' : 'text-(--text-primary)'">
+                                            {{ template.title }}
+                                        </span>
+                                        <span
+                                            class="rounded px-1.5 py-0.5 font-mono text-xs"
+                                            [class]="i === selectedSuggestionIndex() ? 'bg-white/20 text-white' : 'bg-(--bg-elevated) text-(--text-muted)'"
+                                        >
+                                            {{ template.shortcut }}
+                                        </span>
+                                    </div>
+                                    <p class="mt-0.5 line-clamp-1 text-xs" [class]="i === selectedSuggestionIndex() ? 'text-white/80' : 'text-(--text-secondary)'">
+                                        {{ template.category?.name }}
+                                    </p>
+                                </button>
+                                }
+                            </div>
+                            <div class="border-t border-(--border-muted) px-3 py-2">
+                                <span class="text-xs text-(--text-muted)">
+                                    <kbd class="rounded bg-(--kbd-bg) px-1 py-0.5 text-[10px]">↑↓</kbd> Navigate
+                                    <kbd class="ml-2 rounded bg-(--kbd-bg) px-1 py-0.5 text-[10px]">Enter</kbd> Select
+                                    <kbd class="ml-2 rounded bg-(--kbd-bg) px-1 py-0.5 text-[10px]">Esc</kbd> Close
+                                </span>
+                            </div>
+                        </div>
+                        }
+
+                        <textarea pInputTextarea [(ngModel)]="replyContent" [rows]="3" [autoResize]="false"
+                            placeholder="{{ isInternalNote ? 'Add an internal note (not visible to customer)...' : 'Type your reply... (use /shortcut for templates)' }}"
+                            class="w-full resize-none border-none bg-transparent focus:ring-0 min-h-20 max-h-32 overflow-y-auto!"
+                            (input)="onReplyInput($event)"
+                            (keydown)="onReplyKeydown($event)"></textarea>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <p-button icon="pi pi-file-edit" [rounded]="true" [text]="true" severity="secondary"
+                                    pTooltip="Insert template" tooltipPosition="top"
+                                    (onClick)="showTemplatePickerPanel = true" />
+                                <p-button icon="pi pi-paperclip" [rounded]="true" [text]="true" severity="secondary"
+                                    pTooltip="Attach file" tooltipPosition="top" />
+                                <p-button icon="pi pi-image" [rounded]="true" [text]="true" severity="secondary"
+                                    pTooltip="Add image" tooltipPosition="top" />
+                                <div class="relative">
+                                    <p-button icon="pi pi-eraser" [rounded]="true" [text]="true" severity="secondary"
+                                        pTooltip="Clear response" tooltipPosition="top"
+                                        [disabled]="!replyContent.trim()"
+                                        (onClick)="showClearConfirm.set(true)" />
+                                    @if (showClearConfirm()) {
+                                    <div class="absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50">
+                                        <div class="bg-(--bg-surface) border border-(--border-default) rounded-lg shadow-lg p-3 flex items-center gap-3">
+                                            <span class="text-sm text-(--text-primary) whitespace-nowrap">Clear response?</span>
+                                            <div class="flex items-center gap-1">
+                                                <button 
+                                                    (click)="confirmClear()"
+                                                    class="flex items-center justify-center w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                                                >
+                                                    <i class="pi pi-check text-xs"></i>
+                                                </button>
+                                                <button 
+                                                    (click)="showClearConfirm.set(false)"
+                                                    class="flex items-center justify-center w-7 h-7 rounded-full bg-(--bg-elevated) text-(--text-secondary) hover:bg-(--hover-bg) transition-colors"
+                                                >
+                                                    <i class="pi pi-times text-xs"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <!-- Arrow pointing left -->
+                                        <div class="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-(--bg-surface) border-l border-b border-(--border-default) rotate-45"></div>
+                                    </div>
+                                    }
+                                </div>
+                                <p-divider layout="vertical" styleClass="h-6 mx-1" />
+                                <button (click)="isInternalNote = !isInternalNote"
+                                    class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors"
+                                    [class]="isInternalNote ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' : 'hover:bg-(--hover-bg) text-(--text-secondary)'">
+                                    <i class="pi pi-lock text-xs"></i>
+                                    Internal Note
+                                </button>
+                            </div>
+                            <p-button label="Send" icon="pi pi-send" [disabled]="!replyContent.trim()" (onClick)="sendReply()" size="small" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+
+        <!-- Ticket Details Sidebar -->
+        <div class="hidden w-80 shrink-0 overflow-y-auto border border-(--border-default) bg-(--bg-surface) lg:block rounded-md">
+            <div class="p-6">
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-(--text-muted)">Ticket Details</h3>
+
+                <!-- Status -->
+                <div class="mt-6">
+                    <label class="text-xs font-medium text-(--text-secondary)">
+                        Status
+                        @if (pendingStatus() !== null && pendingStatus() !== t.status) {
+                        <span class="ml-1 text-amber-600 dark:text-amber-400">*</span>
+                        }
+                    </label>
+                    <div class="mt-2">
+                        <p-select [options]="statusOptions" [ngModel]="pendingStatus() ?? t.status"
+                            (ngModelChange)="updateStatus($event)" optionLabel="label" optionValue="value"
+                            class="w-full" />
+                    </div>
+                </div>
+
+                <!-- Type -->
+                <div class="mt-4">
+                    <label class="text-xs font-medium text-(--text-secondary)">
+                        Type
+                        @if (pendingType() !== null && pendingType() !== t.type) {
+                        <span class="ml-1 text-amber-600 dark:text-amber-400">*</span>
+                        }
+                    </label>
+                    <div class="mt-2">
+                        <p-select [options]="typeOptions" [ngModel]="pendingType() ?? t.type"
+                            (ngModelChange)="updateType($event)" optionLabel="label" optionValue="value" class="w-full">
+                            <ng-template pTemplate="selectedItem" let-selected>
+                                @if (selected) {
+                                <div class="flex items-center gap-2">
+                                    <i [class]="selected.icon + ' ' + selected.color"></i>
+                                    <span>{{ selected.label }}</span>
+                                </div>
+                                }
+                            </ng-template>
+                            <ng-template pTemplate="item" let-option>
+                                <div class="flex items-center gap-2">
+                                    <i [class]="option.icon + ' ' + option.color"></i>
+                                    <span>{{ option.label }}</span>
+                                </div>
+                            </ng-template>
+                        </p-select>
+                    </div>
+                </div>
+
+                <!-- Priority -->
+                <div class="mt-4">
+                    <label class="text-xs font-medium text-(--text-secondary)">
+                        Priority
+                        @if (pendingPriority() !== null && pendingPriority() !== t.priority) {
+                        <span class="ml-1 text-amber-600 dark:text-amber-400">*</span>
+                        }
+                    </label>
+                    <div class="mt-2">
+                        <p-select [options]="priorityOptions" [ngModel]="pendingPriority() ?? t.priority"
+                            (ngModelChange)="updatePriority($event)" optionLabel="label" optionValue="value"
+                            class="w-full">
+                            <ng-template pTemplate="selectedItem" let-selected>
+                                @if (selected) {
+                                <div class="flex items-center gap-2">
+                                    <i [class]="selected.icon + ' ' + selected.color"></i>
+                                    <span>{{ selected.label }}</span>
+                                </div>
+                                }
+                            </ng-template>
+                            <ng-template pTemplate="item" let-option>
+                                <div class="flex items-center gap-2">
+                                    <i [class]="option.icon + ' ' + option.color"></i>
+                                    <span>{{ option.label }}</span>
+                                </div>
+                            </ng-template>
+                        </p-select>
+                    </div>
+                </div>
+
+                <!-- Assigned Agent -->
+                <div class="mt-4">
+                    <label class="text-xs font-medium text-(--text-secondary)">
+                        Assigned To
+                        @if (pendingAgent() !== undefined && pendingAgent()?.id !== t.assignedAgent?.id) {
+                        <span class="ml-1 text-amber-600 dark:text-amber-400">*</span>
+                        }
+                    </label>
+                    <div class="mt-2">
+                        <p-select [options]="agents"
+                            [ngModel]="pendingAgent() !== undefined ? pendingAgent() : t.assignedAgent"
+                            (ngModelChange)="assignAgent($event)" optionLabel="name" placeholder="Unassigned"
+                            [showClear]="true" [filter]="true" filterBy="name" class="w-full">
+                            <ng-template pTemplate="selectedItem" let-agent>
+                                @if (agent) {
+                                <div class="flex items-center gap-2">
+                                    <p-avatar [image]="agent.avatar" shape="circle"
+                                        [style]="{ width: '1.5rem', height: '1.5rem' }" />
+                                    <span>{{ agent.name }}</span>
+                                </div>
+                                }
+                            </ng-template>
+                            <ng-template pTemplate="item" let-agent>
+                                <div class="flex items-center gap-2">
+                                    <p-avatar [image]="agent.avatar" shape="circle"
+                                        [style]="{ width: '1.5rem', height: '1.5rem' }" />
+                                    <span>{{ agent.name }}</span>
+                                </div>
+                            </ng-template>
+                        </p-select>
+                    </div>
+                </div>
+
+                <!-- Followers -->
+                <div class="mt-4">
+                    <label class="text-xs font-medium text-(--text-secondary)">
+                        Followers
+                        @if (hasFollowersChanged()) {
+                            <span class="ml-1 text-amber-600 dark:text-amber-400">*</span>
+                        }
+                    </label>
+                    <p class="text-[11px] text-(--text-muted) mt-0.5 mb-2">
+                        Followers receive updates on this ticket
+                    </p>
+                    <div>
+                        <p-multiselect 
+                            [options]="agents"
+                            [ngModel]="pendingFollowers() !== undefined ? pendingFollowers() : (t.followers || [])"
+                            (ngModelChange)="updateFollowers($event)"
+                            optionLabel="name"
+                            placeholder="Add followers..."
+                            [showClear]="true"
+                            [filter]="true"
+                            filterBy="name"
+                            display="chip"
+                            class="w-full"
+                        >
+                            <ng-template pTemplate="selectedItem" let-agent>
+                                <div class="flex items-center gap-2">
+                                    <p-avatar [image]="agent.avatar" shape="circle"
+                                        [style]="{ width: '1.25rem', height: '1.25rem' }" />
+                                    <span class="text-sm">{{ agent.name }}</span>
+                                </div>
+                            </ng-template>
+                            <ng-template pTemplate="item" let-agent>
+                                <div class="flex items-center gap-2">
+                                    <p-avatar [image]="agent.avatar" shape="circle"
+                                        [style]="{ width: '1.5rem', height: '1.5rem' }" />
+                                    <span>{{ agent.name }}</span>
+                                </div>
+                            </ng-template>
+                        </p-multiselect>
+                    </div>
+                </div>
+
+                <p-divider />
+
+                <!-- Customer Info -->
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-(--text-muted)">Customer</h3>
+                <div class="mt-4 flex items-center gap-3">
+                    <p-avatar [label]="t.customer.name.charAt(0)" shape="circle" size="large"
+                        [style]="{ 'background-color': 'var(--color-tertiary)', 'color': 'var(--color-primary)' }" />
+                    <div>
+                        <p class="font-medium text-(--text-primary)">{{ t.customer.name }}</p>
+                        <p class="text-xs text-(--text-secondary)">{{ t.customer.email }}</p>
+                    </div>
+                </div>
+
+                <p-divider />
+
+                <!-- Timestamps -->
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-(--text-muted)">Timeline</h3>
+                <div class="mt-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-(--text-secondary)">Created</span>
+                        <span class="text-sm text-(--text-primary)">{{ formatDate(t.createdAt) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-(--text-secondary)">Updated</span>
+                        <span class="text-sm text-(--text-primary)">{{ formatDate(t.updatedAt) }}</span>
+                    </div>
+                </div>
+
+                <p-divider />
+
+                <!-- Tags -->
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-(--text-muted)">Tags</h3>
+                <div class="mt-4 flex flex-wrap gap-2">
+                    @for (tag of t.tags; track tag) {
+                    <span class="rounded-lg bg-(--bg-elevated) px-3 py-2 text-xs font-medium text-(--text-secondary) items-center">
+                        {{ tag }}
+                    </span>
+                    }
+                    <button
+                        class="rounded-lg border border-dashed border-(--border-default) px-3 py-2 text-xs text-(--text-muted) hover:bg-(--hover-bg) transition-colors">
+                        <i class="pi pi-plus text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+} @else {
+<!-- Loading State -->
+<div class="flex h-full items-center justify-center">
+    <div class="flex flex-col items-center gap-4">
+        <i class="pi pi-spin pi-spinner text-4xl text-(--text-muted)"></i>
+        <p class="text-sm text-(--text-secondary)">Loading ticket...</p>
+    </div>
+</div>
+}
+
+<!-- Template Picker Dialog -->
+<p-dialog
+    header="Insert Template"
+    [(visible)]="showTemplatePickerPanel"
+    [modal]="true"
+    [style]="{ width: '600px', maxWidth: '95vw' }"
+    [contentStyle]="{ 'max-height': '70vh', 'padding': 0 }"
+    [closable]="true"
+    [draggable]="false"
+>
+    <div class="p-4">
+        <!-- Search -->
+        <div class="relative">
+            <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted)"></i>
+            <input
+                type="text"
+                pInputText
+                [(ngModel)]="templateSearchQuery"
+                placeholder="Search templates..."
+                class="w-full pl-10!"
+            />
+        </div>
+
+        <!-- Category Filters -->
+        <div class="mt-4 flex flex-wrap gap-2">
+            <button
+                (click)="selectedTemplateCategory.set(null)"
+                class="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                [class]="!selectedTemplateCategory() ? 'bg-(--color-primary) text-white' : 'bg-(--bg-elevated) text-(--text-secondary) hover:bg-(--hover-bg)'"
+            >
+                All
+            </button>
+            @for (cat of cannedResponseCategories(); track cat.id) {
+                <button
+                    (click)="selectedTemplateCategory.set(cat.id)"
+                    class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors"
+                    [class]="selectedTemplateCategory() === cat.id ? 'text-white' : 'bg-(--bg-elevated) text-(--text-secondary) hover:bg-(--hover-bg)'"
+                    [style.background-color]="selectedTemplateCategory() === cat.id ? cat.color : ''"
+                >
+                    <i [class]="cat.icon" class="text-xs"></i>
+                    {{ cat.name }}
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Templates List -->
+    <div class="max-h-80 overflow-y-auto border-t border-(--border-default)">
+        @if (filteredTemplates().length === 0) {
+            <div class="p-8 text-center">
+                <i class="pi pi-file-edit text-4xl text-(--text-muted)"></i>
+                <p class="mt-2 text-sm text-(--text-secondary)">No templates found</p>
+            </div>
+        } @else {
+            @for (template of filteredTemplates(); track template.id) {
+                <button
+                    (click)="insertTemplate(template)"
+                    class="block w-full border-b border-(--border-muted) p-4 text-left transition-colors hover:bg-(--hover-bg)"
+                >
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="font-medium text-(--text-primary)">{{ template.title }}</span>
+                                <span
+                                    class="rounded-full px-2 py-0.5 text-xs"
+                                    [style.background-color]="getCategoryColor(template.categoryId) + '20'"
+                                    [style.color]="getCategoryColor(template.categoryId)"
+                                >
+                                    {{ template.category?.name }}
+                                </span>
+                            </div>
+                            <p class="mt-1 line-clamp-1 text-sm text-(--text-secondary)">
+                                {{ template.content | slice:0:100 }}...
+                            </p>
+                        </div>
+                        <span class="shrink-0 rounded-lg bg-(--bg-elevated) px-2 py-1 font-mono text-xs text-(--text-muted)">
+                            {{ template.shortcut }}
+                        </span>
+                    </div>
+                </button>
+            }
+        }
+    </div>
+
+    <ng-template pTemplate="footer">
+        <p-button
+            label="Cancel"
+            severity="secondary"
+            [text]="true"
+            (onClick)="showTemplatePickerPanel = false"
+        />
+    </ng-template>
+</p-dialog>
+
+<!-- Ticket List Drawer -->
+<p-drawer 
+    [visible]="showTicketDrawer()" 
+    (visibleChange)="showTicketDrawer.set($event)"
+    [modal]="false"
+    position="left"
+    [style]="{ width: '380px' }"
+    styleClass="ticket-list-drawer"
+>
+    <ng-template pTemplate="header">
+        <div class="flex items-center gap-2">
+            <i class="pi pi-list text-(--text-muted)"></i>
+            <span class="font-semibold text-(--text-primary)">All Tickets</span>
+            <span class="rounded-full bg-(--bg-elevated) px-2 py-0.5 text-xs text-(--text-secondary)">
+                {{ allTickets().length }}
+            </span>
+        </div>
+    </ng-template>
+    
+    <!-- Search -->
+    <div class="px-4 pb-4">
+        <div class="relative">
+            <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted)"></i>
+            <input
+                type="text"
+                pInputText
+                [ngModel]="ticketSearchQuery()"
+                (ngModelChange)="ticketSearchQuery.set($event)"
+                placeholder="Search tickets..."
+                class="w-full pl-10!"
+            />
+        </div>
+    </div>
+    
+    <!-- Ticket List -->
+    <div class="overflow-y-auto flex-1">
+        @if (filteredDrawerTickets().length === 0) {
+            <div class="p-8 text-center">
+                <i class="pi pi-inbox text-4xl text-(--text-muted)"></i>
+                <p class="mt-2 text-sm text-(--text-secondary)">No tickets found</p>
+            </div>
+        } @else {
+            @for (drawerTicket of filteredDrawerTickets(); track drawerTicket.id) {
+                <button
+                    (click)="navigateToTicket(drawerTicket.ticketNumber)"
+                    class="w-full px-4 py-3 text-left border-b border-(--border-muted) transition-colors hover:bg-(--hover-bg)"
+                    [class]="drawerTicket.id === ticketId() ? 'bg-(--bg-elevated) border-l-2 border-l-(--color-primary)' : ''"
+                >
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-mono text-xs font-medium" style="color: var(--color-primary)">
+                                    {{ drawerTicket.ticketPrefix || 'TKT' }}-{{ drawerTicket.ticketNumber }}
+                                </span>
+                                <span 
+                                    class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+                                    [ngClass]="getStatusColor(drawerTicket.status)"
+                                >
+                                    {{ drawerTicket.status | titlecase }}
+                                </span>
+                            </div>
+                            <p class="text-sm font-medium text-(--text-primary) line-clamp-1">
+                                {{ drawerTicket.subject }}
+                            </p>
+                            <p class="text-xs text-(--text-muted) mt-0.5">
+                                {{ drawerTicket.customer.name }}
+                            </p>
+                        </div>
+                        @if (drawerTicket.id === ticketId()) {
+                            <i class="pi pi-check text-xs" style="color: var(--color-primary)"></i>
+                        }
+                    </div>
+                </button>
+            }
+        }
+    </div>
+</p-drawer>

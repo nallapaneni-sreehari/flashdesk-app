@@ -1,0 +1,52 @@
+<div class="flex h-screen flex-col bg-(--bg-base)">
+  <!-- Announcement Bar -->
+  @if (showAnnouncement()) {
+    <div 
+      class="overflow-hidden transition-all duration-500 ease-in-out"
+      [style.max-height]="announcementDismissed() ? '0px' : '3rem'"
+      [style.opacity]="announcementDismissed() ? '0' : '1'"
+    >
+      <div class="relative flex items-center justify-center gap-2 px-4 py-2 text-center text-sm font-medium text-black dark:text-white"
+           style="background: linear-gradient(90deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 70%, black))">
+        <i class="pi pi-megaphone text-xs"></i>
+        <span>{{ announcementMessage }}</span>
+        <a href="javascript:void(0)" class="ml-1 underline underline-offset-2 hover:opacity-80">Learn more</a>
+        <button
+          (click)="dismissAnnouncement()"
+          class="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-2 text-white/70 transition-colors hover:bg-white/20 hover:text-white w-6 h-6 flex items-center justify-center"
+          aria-label="Dismiss announcement"
+        >
+          <i class="pi pi-times text-xs"></i>
+        </button>
+      </div>
+    </div>
+  }
+
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Sidebar -->
+    <app-sidebar [collapsed]="sidebarCollapsed()" (toggle)="toggleSidebar()" />
+
+    <!-- Main Content Area -->
+    <div class="flex flex-1 flex-col overflow-hidden">
+      <!-- Topbar -->
+      <app-topbar (toggleSidebar)="toggleSidebar()" />
+
+      <!-- Page Content -->
+      <main class="flex-1 overflow-auto p-6 relative">
+        <div [@routeAnimation]="getRouteAnimationData()">
+          <router-outlet />
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="border-t border-(--border-default) bg-(--bg-surface) px-6 py-3">
+        <p class="text-center text-sm text-(--text-secondary)">
+          &copy; {{ currentYear }} Flashdesk. All rights reserved.
+        </p>
+      </footer>
+    </div>
+  </div>
+</div>
+
+<!-- Global Search Modal -->
+<app-global-search />

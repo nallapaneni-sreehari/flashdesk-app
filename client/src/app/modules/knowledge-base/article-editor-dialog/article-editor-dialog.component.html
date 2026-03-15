@@ -1,0 +1,126 @@
+<p-dialog [header]="dialogTitle" [(visible)]="visible" [modal]="true" [closable]="true" [draggable]="false"
+    [resizable]="false" [style]="{ width: '800px', maxHeight: '90vh' }" (onHide)="close()"
+    styleClass="article-editor-dialog">
+
+    <div class="flex flex-col gap-5">
+        <!-- Title & Category -->
+        <div>
+            <h4 class="mb-3 text-sm font-semibold text-(--text-primary) flex items-center gap-2">
+                <i class="pi pi-file-edit text-(--text-muted)"></i>
+                Article Details
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="flex flex-col gap-1 md:col-span-2">
+                    <label class="text-xs font-medium text-(--text-secondary)">Title *</label>
+                    <input pInputText [(ngModel)]="title" placeholder="How to reset your password" class="w-full" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-medium text-(--text-secondary)">Category *</label>
+                    <p-select [options]="categoryOptions" [(ngModel)]="categoryId" optionLabel="label"
+                        optionValue="value" placeholder="Select category" class="w-full" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Excerpt -->
+        <div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-(--text-secondary)">Excerpt *</label>
+                <span class="text-xs text-(--text-muted)">A brief summary that appears in search results</span>
+                <textarea pTextarea [(ngModel)]="excerpt" placeholder="Brief description of the article..."
+                    [rows]="2" [autoResize]="true" class="w-full mt-1"></textarea>
+            </div>
+        </div>
+
+        <!-- Content Editor -->
+        <div>
+            <h4 class="mb-3 text-sm font-semibold text-(--text-primary) flex items-center gap-2">
+                <i class="pi pi-align-left text-(--text-muted)"></i>
+                Content *
+            </h4>
+            <div class="ticket-editor-wrapper rounded-lg border border-(--border-default) overflow-hidden">
+                <p-editor [(ngModel)]="content" [style]="{ height: '300px' }">
+                    <ng-template pTemplate="header">
+                        <span class="ql-formats">
+                            <select class="ql-header">
+                                <option value="1">Heading 1</option>
+                                <option value="2">Heading 2</option>
+                                <option value="3">Heading 3</option>
+                                <option selected>Normal</option>
+                            </select>
+                        </span>
+                        <span class="ql-formats">
+                            <button type="button" class="ql-bold" aria-label="Bold"></button>
+                            <button type="button" class="ql-italic" aria-label="Italic"></button>
+                            <button type="button" class="ql-underline" aria-label="Underline"></button>
+                            <button type="button" class="ql-strike" aria-label="Strike"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <button type="button" class="ql-list" value="ordered" aria-label="Ordered List"></button>
+                            <button type="button" class="ql-list" value="bullet" aria-label="Bullet List"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <button type="button" class="ql-link" aria-label="Link"></button>
+                            <button type="button" class="ql-image" aria-label="Image"></button>
+                            <button type="button" class="ql-code-block" aria-label="Code Block"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <button type="button" class="ql-clean" aria-label="Clear Formatting"></button>
+                        </span>
+                    </ng-template>
+                </p-editor>
+            </div>
+        </div>
+
+        <!-- Tags -->
+        <div>
+            <h4 class="mb-3 text-sm font-semibold text-(--text-primary) flex items-center gap-2">
+                <i class="pi pi-tag text-(--text-muted)"></i>
+                Tags
+            </h4>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-(--text-secondary)">Add tags to improve searchability</label>
+                <p-chips [(ngModel)]="tags" placeholder="Type and press Enter" class="w-full" />
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div>
+            <h4 class="mb-3 text-sm font-semibold text-(--text-primary) flex items-center gap-2">
+                <i class="pi pi-circle-fill text-(--text-muted) text-xs"></i>
+                Publication Status
+            </h4>
+            <p-selectButton [options]="statusOptions" [(ngModel)]="status" optionLabel="label" optionValue="value">
+                <ng-template pTemplate="item" let-item>
+                    <div class="flex items-center gap-2 px-2">
+                        <i [class]="item.icon"></i>
+                        <span>{{ item.label }}</span>
+                    </div>
+                </ng-template>
+            </p-selectButton>
+            <p class="mt-2 text-xs text-(--text-muted)">
+                @if (status === 'draft') {
+                Draft articles are only visible to admins.
+                } @else {
+                Published articles are visible to all users.
+                }
+            </p>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <div class="flex items-center justify-between w-full">
+            <div class="text-xs text-(--text-muted)">
+                @if (!isValid) {
+                <i class="pi pi-info-circle mr-1"></i>
+                Fill in all required fields
+                }
+            </div>
+            <div class="flex items-center gap-2">
+                <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="close()" />
+                <p-button [label]="isEditing ? 'Update Article' : 'Create Article'" icon="pi pi-check"
+                    (onClick)="onSave()" [disabled]="!isValid" />
+            </div>
+        </div>
+    </ng-template>
+</p-dialog>

@@ -1,0 +1,246 @@
+<div class="mx-auto max-w-3xl space-y-8">
+  <!-- Page Header -->
+  <div>
+    <h2 class="text-2xl font-bold text-(--text-primary)">Password & Security</h2>
+    <p class="mt-1 text-(--text-secondary)">Keep your account secure with strong passwords and 2FA</p>
+  </div>
+
+  <!-- Change Password Section -->
+  <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h3 class="text-lg font-semibold text-(--text-primary)">Password</h3>
+        <p class="mt-1 text-sm text-(--text-secondary)">
+          Last changed 30 days ago
+        </p>
+      </div>
+      @if (!showPasswordForm()) {
+        <p-button
+          label="Change Password"
+          icon="pi pi-lock"
+          [outlined]="true"
+          (onClick)="showPasswordForm.set(true)"
+        />
+      }
+    </div>
+
+    @if (showPasswordForm()) {
+      <div class="mt-6 space-y-6">
+        <p-divider />
+        
+        <!-- Current Password -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-(--text-primary)">
+            Current password
+          </label>
+          <p-password
+            [(ngModel)]="passwordForm.currentPassword"
+            [feedback]="false"
+            [toggleMask]="true"
+            placeholder="Enter current password"
+            inputStyleClass="w-full"
+            styleClass="w-full"
+          />
+        </div>
+
+        <!-- New Password -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-(--text-primary)">
+            New password
+          </label>
+          <p-password
+            [(ngModel)]="passwordForm.newPassword"
+            [feedback]="false"
+            [toggleMask]="true"
+            placeholder="Enter new password"
+            inputStyleClass="w-full"
+            styleClass="w-full"
+          />
+          
+          <!-- Password Strength Indicator -->
+          @if (passwordForm.newPassword) {
+            <div class="space-y-2">
+              <div class="flex gap-1">
+                @for (i of [1, 2, 3, 4]; track i) {
+                  <div
+                    class="h-1 flex-1 rounded-full transition-all"
+                    [class]="i <= passwordStrength().score ? passwordStrength().color : 'bg-(--bg-elevated)'"
+                  ></div>
+                }
+              </div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-(--text-muted)">Password strength:</span>
+                <span [class]="passwordStrength().score >= 3 ? 'text-green-600' : passwordStrength().score >= 2 ? 'text-yellow-600' : 'text-red-600'">
+                  {{ passwordStrength().label }}
+                </span>
+              </div>
+            </div>
+          }
+          
+          <ul class="space-y-1 text-xs text-(--text-muted)">
+            <li class="flex items-center gap-2">
+              <i class="pi text-xs" [class]="hasMinLength() ? 'pi-check-circle text-green-600' : 'pi-circle'"></i>
+              At least 8 characters
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="pi text-xs" [class]="hasUpperAndLower() ? 'pi-check-circle text-green-600' : 'pi-circle'"></i>
+              Upper & lowercase letters
+            </li>
+            <li class="flex items-center gap-2">
+              <i class="pi text-xs" [class]="hasNumber() ? 'pi-check-circle text-green-600' : 'pi-circle'"></i>
+              At least one number
+            </li>
+          </ul>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-(--text-primary)">
+            Confirm new password
+          </label>
+          <p-password
+            [(ngModel)]="passwordForm.confirmPassword"
+            [feedback]="false"
+            [toggleMask]="true"
+            placeholder="Confirm new password"
+            inputStyleClass="w-full"
+            styleClass="w-full"
+          />
+          @if (passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword) {
+            <p class="text-xs text-red-600">
+              <i class="pi pi-exclamation-circle mr-1"></i>
+              Passwords do not match
+            </p>
+          }
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-3">
+          <p-button
+            label="Cancel"
+            severity="secondary"
+            [text]="true"
+            (onClick)="showPasswordForm.set(false)"
+          />
+          <p-button
+            label="Update Password"
+            icon="pi pi-check"
+            [loading]="isSaving()"
+            [disabled]="!passwordValid()"
+            (onClick)="changePassword()"
+          />
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Two-Factor Authentication -->
+  <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+    <div class="flex items-start justify-between gap-4">
+      <div class="flex items-start gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl" 
+             [class]="twoFactorEnabled() ? 'bg-green-100 text-green-600' : 'bg-(--bg-elevated) text-(--text-secondary)'">
+          <i class="pi pi-shield text-xl"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-(--text-primary)">Two-Factor Authentication</h3>
+          <p class="mt-1 text-sm text-(--text-secondary)">
+            Add an extra layer of security to your account by requiring a verification code in addition to your password.
+          </p>
+          @if (twoFactorEnabled()) {
+            <div class="mt-2 flex items-center gap-2">
+              <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                <i class="pi pi-check-circle text-xs"></i>
+                Enabled
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+      <p-toggleSwitch
+        [(ngModel)]="twoFactorEnabled"
+        (onChange)="toggleTwoFactor()"
+      />
+    </div>
+  </div>
+
+  <!-- Login Notifications -->
+  <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+    <div class="flex items-start justify-between gap-4">
+      <div class="flex items-start gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-(--bg-elevated) text-(--text-secondary)">
+          <i class="pi pi-bell text-xl"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-(--text-primary)">Login Notifications</h3>
+          <p class="mt-1 text-sm text-(--text-secondary)">
+            Receive email alerts when someone logs into your account from a new device or location.
+          </p>
+        </div>
+      </div>
+      <p-toggleSwitch [(ngModel)]="loginNotifications" />
+    </div>
+  </div>
+
+  <!-- Active Sessions -->
+  <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <h3 class="text-lg font-semibold text-(--text-primary)">Active Sessions</h3>
+        <p class="mt-1 text-sm text-(--text-secondary)">
+          Manage your active sessions and sign out from other devices
+        </p>
+      </div>
+      @if (sessions.length > 1) {
+        <p-button
+          label="Sign out all"
+          icon="pi pi-sign-out"
+          severity="danger"
+          [text]="true"
+          size="small"
+          (onClick)="revokeAllSessions()"
+        />
+      }
+    </div>
+
+    <div class="space-y-4">
+      @for (session of sessions; track session.id) {
+        <div class="flex items-center justify-between rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+          <div class="flex items-center gap-4">
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-(--bg-surface)">
+              <i class="pi text-lg text-(--text-secondary)"
+                 [class.pi-desktop]="session.device.includes('PC') || session.device.includes('Mac')"
+                 [class.pi-mobile]="session.device.includes('iPhone') || session.device.includes('Android')">
+              </i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-(--text-primary)">{{ session.device }}</span>
+                @if (session.current) {
+                  <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                    Current
+                  </span>
+                }
+              </div>
+              <div class="mt-0.5 text-sm text-(--text-secondary)">
+                {{ session.browser }} · {{ session.location }}
+              </div>
+              <div class="text-xs text-(--text-muted)">{{ session.lastActive }}</div>
+            </div>
+          </div>
+          @if (!session.current) {
+            <p-button
+              icon="pi pi-times"
+              severity="secondary"
+              [rounded]="true"
+              [text]="true"
+              (onClick)="revokeSession(session)"
+              pTooltip="Sign out"
+              tooltipPosition="left"
+            />
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

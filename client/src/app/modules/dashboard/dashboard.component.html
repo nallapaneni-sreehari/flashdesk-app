@@ -1,0 +1,514 @@
+<div class="space-y-8">
+  <!-- Welcome Header -->
+  <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+    <div class="space-y-1">
+      <div class="flex items-center gap-3">
+        <h1 class="text-3xl font-bold text-(--text-primary)">
+          {{ greeting() }}, {{ (currentUser()?.name?.split(' ') ?? ['there'])[0] }}
+        </h1>
+        <span class="text-2xl">👋</span>
+      </div>
+      <p class="text-(--text-secondary)">
+        {{ formatDate(currentDate) }} · Here's what's happening with your support queue
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <p-button label="New Ticket" icon="pi pi-plus" routerLink="/tickets" [queryParams]="{ action: 'new' }" />
+      <p-button icon="pi pi-refresh" [rounded]="true" [outlined]="true" severity="secondary" pTooltip="Refresh"
+        tooltipPosition="bottom" (onClick)="refreshData()" />
+    </div>
+  </div>
+
+  <!-- Priority Alerts Banner -->
+  @if (summary.overdueTickets > 0 || (isAdmin() && summary.unassigned > 3)) {
+  <div class="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4">
+    <div class="flex items-center gap-3">
+      <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50">
+        <i class="pi pi-exclamation-triangle text-red-600"></i>
+      </div>
+      <div class="flex-1">
+        <p class="font-medium text-red-800 dark:text-red-200">Attention needed</p>
+        <p class="text-sm text-red-600 dark:text-red-300">
+          @if (summary.overdueTickets > 0) {
+          <span>{{ summary.overdueTickets }} overdue ticket{{ summary.overdueTickets > 1 ? 's' : '' }}</span>
+          }
+          @if (summary.overdueTickets > 0 && isAdmin() && summary.unassigned > 3) {
+          <span> · </span>
+          }
+          @if (isAdmin() && summary.unassigned > 3) {
+          <span>{{ summary.unassigned }} unassigned tickets</span>
+          }
+        </p>
+      </div>
+      <p-button label="View" severity="danger" [outlined]="true" size="small" routerLink="/tickets"
+        [queryParams]="{ filter: 'overdue' }" />
+    </div>
+  </div>
+  }
+
+  <!-- KPI Cards Row -->
+  @if (isLoading()) {
+  <div class="grid grid-cols-2 gap-5 lg:grid-cols-4">
+    @for (i of [1, 2, 3, 4]; track i) {
+    <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+      <div class="flex items-center justify-between mb-4">
+        <p-skeleton width="2.5rem" height="2.5rem" styleClass="rounded-xl" />
+        <p-skeleton width="4rem" height="1.25rem" styleClass="rounded-full" />
+      </div>
+      <p-skeleton width="50%" height="2rem" styleClass="mb-2" />
+      <p-skeleton width="70%" height="0.75rem" />
+    </div>
+    }
+  </div>
+  } @else {
+  <div class="grid grid-cols-2 gap-5 lg:grid-cols-4">
+    <!-- Open Tickets -->
+    <a routerLink="/tickets" [queryParams]="{ status: 'open' }"
+      class="group relative rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6 transition-all duration-300 hover:shadow-[0_8px_30px_-6px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 cursor-pointer overflow-hidden">
+      <!-- Decorative gradient blob -->
+      <div
+        class="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
+        style="background: var(--color-primary)"></div>
+
+      <div class="relative">
+        <div class="mb-4 flex items-center justify-between">
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl transition-colors duration-300"
+            style="background: color-mix(in srgb, var(--color-primary) 12%, transparent)">
+            <i class="pi pi-inbox text-lg" style="color: var(--color-primary)"></i>
+          </div>
+        </div>
+        <p class="text-sm font-medium text-(--text-secondary)">Open Tickets</p>
+        <div class="mt-1 flex items-baseline gap-2">
+          <p class="text-3xl font-extrabold tracking-tight text-(--text-primary)">{{ summary.totalOpen }}</p>
+          @if (summary.unassigned > 0) {
+          <span class="text-xs text-amber-500 font-medium">{{ summary.unassigned }} unassigned</span>
+          }
+        </div>
+        <div
+          class="mt-4 flex items-center gap-1.5 text-xs font-medium opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1"
+          style="color: var(--color-primary)">
+          <span>View all</span>
+          <i class="pi pi-arrow-right text-[10px]"></i>
+        </div>
+      </div>
+    </a>
+
+    <!-- Resolved Today -->
+    <a routerLink="/tickets" [queryParams]="{ status: 'resolved' }"
+      class="group relative rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6 transition-all duration-300 hover:shadow-[0_8px_30px_-6px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 cursor-pointer overflow-hidden">
+      <div
+        class="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-emerald-400 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100">
+      </div>
+
+      <div class="relative">
+        <div class="mb-4 flex items-center justify-between">
+          <div
+            class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 transition-colors duration-300 dark:bg-emerald-900/20">
+            <i class="pi pi-check-circle text-lg text-emerald-600"></i>
+          </div>
+        </div>
+        <p class="text-sm font-medium text-(--text-secondary)">Resolved Today</p>
+        <div class="mt-1 flex items-baseline gap-2">
+          <p class="text-3xl font-extrabold tracking-tight text-emerald-600">{{ summary.resolvedToday }}</p>
+          <span class="text-xs font-medium text-emerald-500">tickets</span>
+        </div>
+        <div
+          class="mt-4 flex items-center gap-1.5 text-xs font-medium text-emerald-600 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1">
+          <span>View resolved</span>
+          <i class="pi pi-arrow-right text-[10px]"></i>
+        </div>
+      </div>
+    </a>
+
+    <!-- Avg Response Time -->
+    <div
+      class="group relative rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6 transition-all duration-300 hover:shadow-[0_8px_30px_-6px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 overflow-hidden">
+      <div
+        class="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-blue-400 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100">
+      </div>
+
+      <div class="relative">
+        <div class="mb-4 flex items-center justify-between">
+          <div
+            class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 transition-colors duration-300 dark:bg-blue-900/20">
+            <i class="pi pi-stopwatch text-lg text-blue-600"></i>
+          </div>
+        </div>
+        <p class="text-sm font-medium text-(--text-secondary)">Avg Response</p>
+        <div class="mt-1 flex items-baseline gap-1">
+          <p class="text-3xl font-extrabold tracking-tight text-(--text-primary)">{{ summary.avgResponseHours }}</p>
+          <span class="text-base font-medium text-(--text-muted)">hrs</span>
+        </div>
+        <!-- Mini bar indicator -->
+        <div class="mt-4 h-1.5 w-full rounded-full bg-(--bg-elevated) overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-700 ease-out"
+            [class]="summary.avgResponseHours <= 1 ? 'bg-emerald-500' : summary.avgResponseHours <= 2 ? 'bg-blue-500' : summary.avgResponseHours <= 4 ? 'bg-amber-500' : 'bg-red-500'"
+            [style.width.%]="100 - Math.min((summary.avgResponseHours / 8) * 100, 100)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLA Compliance -->
+    <div
+      class="group relative rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6 transition-all duration-300 hover:shadow-[0_8px_30px_-6px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 overflow-hidden">
+      <div
+        class="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
+        [class]="slaCompliance.overall >= 80 ? 'bg-emerald-400' : slaCompliance.overall >= 60 ? 'bg-amber-400' : 'bg-red-400'">
+      </div>
+
+      <div class="relative">
+        <div class="mb-4 flex items-center justify-between">
+          <div
+            class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 transition-colors duration-300 dark:bg-violet-900/20">
+            <i class="pi pi-shield text-lg text-violet-600"></i>
+          </div>
+        </div>
+        <p class="text-sm font-medium text-(--text-secondary)">SLA Compliance</p>
+        <div class="mt-1 flex items-baseline gap-1">
+          <p class="text-3xl font-extrabold tracking-tight"
+            [class]="slaCompliance.overall >= 80 ? 'text-emerald-600' : slaCompliance.overall >= 60 ? 'text-amber-500' : 'text-red-600'">
+            {{ slaCompliance.overall }}
+          </p>
+          <span class="text-base font-medium text-(--text-muted)">%</span>
+        </div>
+        <!-- Segmented progress bar -->
+        <div class="mt-4 flex gap-0.5">
+          <div class="h-1.5 flex-1 rounded-l-full bg-(--bg-elevated) overflow-hidden">
+            <div class="h-full rounded-l-full transition-all duration-700 ease-out"
+              [class]="slaCompliance.firstResponse >= 80 ? 'bg-emerald-500' : slaCompliance.firstResponse >= 60 ? 'bg-amber-500' : 'bg-red-500'"
+              [style.width.%]="slaCompliance.firstResponse"></div>
+          </div>
+          <div class="h-1.5 flex-1 rounded-r-full bg-(--bg-elevated) overflow-hidden">
+            <div class="h-full rounded-r-full transition-all duration-700 ease-out"
+              [class]="slaCompliance.resolution >= 80 ? 'bg-emerald-500' : slaCompliance.resolution >= 60 ? 'bg-amber-500' : 'bg-red-500'"
+              [style.width.%]="slaCompliance.resolution"></div>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-between text-[10px] text-(--text-muted)">
+          <span>Response {{ slaCompliance.firstResponse }}%</span>
+          <span>Resolution {{ slaCompliance.resolution }}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Main Content Grid -->
+  <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+    <!-- Left Column - 2/3 width -->
+    <div class="xl:col-span-2 space-y-6">
+
+      <!-- Ticket Volume Chart -->
+      <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div>
+            <h2 class="font-semibold text-(--text-primary)">Ticket Volume</h2>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-5 text-sm">
+              <div class="flex items-center gap-2">
+                <div class="h-2.5 w-2.5 rounded-full" style="background-color: var(--color-primary)"></div>
+                <span class="text-(--text-secondary)">Created</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="h-2.5 w-2.5 rounded-full bg-emerald-500"></div>
+                <span class="text-(--text-secondary)">Resolved</span>
+              </div>
+            </div>
+            <p-select [options]="chartRangeOptions" [ngModel]="chartRange()"
+              (ngModelChange)="onChartRangeChange($event)" optionLabel="label" optionValue="value" styleClass="w-40"
+              size="small" />
+          </div>
+        </div>
+
+        @if (isLoading()) {
+        <p-skeleton width="100%" height="220px" />
+        } @else {
+        <div class="h-56">
+          <canvas #ticketVolumeChart></canvas>
+        </div>
+        }
+      </div>
+
+      <!-- Priority Section (role-aware) -->
+      <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-(--border-default)">
+          <div class="flex items-center gap-3">
+            <div class="flex h-9 w-9 items-center justify-center rounded-lg"
+              style="background-color: var(--color-tertiary)">
+              <i class="pi text-sm" [class]="isAdmin() ? 'pi-bell' : 'pi-flag'" style="color: var(--color-primary)"></i>
+            </div>
+            <div>
+              <h2 class="font-semibold text-(--text-primary)">{{ isAdmin() ? 'Needs Attention' : 'Your Priorities' }}
+              </h2>
+              <p class="text-xs text-(--text-muted)">{{ isAdmin() ? 'Tickets requiring admin action' : 'Tickets that
+                need your attention' }}</p>
+            </div>
+          </div>
+          <a routerLink="/tickets" [queryParams]="isAdmin() ? { filter: 'unassigned' } : { filter: 'assigned-to-me' }"
+            class="text-sm font-medium hover:underline" style="color: var(--color-primary)">
+            View all
+          </a>
+        </div>
+
+        @if (isLoading()) {
+        <div class="p-6 space-y-4">
+          @for (i of [1, 2, 3]; track i) {
+          <div class="flex items-center gap-4">
+            <p-skeleton width="3rem" height="2rem" />
+            <div class="flex-1">
+              <p-skeleton width="70%" height="1rem" styleClass="mb-2" />
+              <p-skeleton width="40%" height="0.75rem" />
+            </div>
+          </div>
+          }
+        </div>
+        } @else if (isAdmin()) {
+        <!-- Admin view: Unassigned + Escalated tabs -->
+        @if (unassignedTickets.length === 0 && escalatedTickets.length === 0) {
+        <div class="p-12 text-center">
+          <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-(--bg-muted) mb-4">
+            <i class="pi pi-check-circle text-3xl text-green-500"></i>
+          </div>
+          <p class="font-medium text-(--text-primary)">Everything looks good!</p>
+          <p class="text-sm text-(--text-muted) mt-1">No tickets need your attention right now</p>
+        </div>
+        } @else {
+        <!-- Unassigned tickets -->
+        @if (unassignedTickets.length > 0) {
+        <div class="px-6 pt-4 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-(--text-muted)">Unassigned</span>
+            <span
+              class="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full text-xs font-bold text-white bg-amber-500">{{
+              unassignedTickets.length }}</span>
+          </div>
+        </div>
+        <div class="divide-y divide-(--border-muted)">
+          @for (ticket of unassignedTickets; track ticket.id) {
+          <a [routerLink]="['/tickets', ticket.ticketNumber]"
+            class="flex items-center gap-4 px-6 py-3.5 hover:bg-(--hover-bg) transition-colors group">
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-lg shrink-0 bg-amber-50 dark:bg-amber-900/20">
+              <i class="pi pi-user-plus text-sm text-amber-600"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-0.5">
+                <span class="text-xs font-mono text-(--text-muted)">#{{ ticket.ticketNumber }}</span>
+                <span class="text-xs px-1.5 py-0.5 rounded"
+                  [class]="getPriorityBg(ticket.priority) + ' ' + getPriorityColor(ticket.priority)">
+                  {{ getPriorityLabel(ticket.priority) }}
+                </span>
+              </div>
+              <p class="font-medium text-(--text-primary) truncate group-hover:text-primary transition-colors text-sm">
+                {{ ticket.subject }}
+              </p>
+              <p class="text-xs text-(--text-muted) mt-0.5">
+                {{ ticket.customer?.name }} · {{ formatTimeAgo(ticket.createdAt) }}
+              </p>
+            </div>
+            <i class="pi pi-chevron-right text-(--text-muted) group-hover:translate-x-1 transition-transform"></i>
+          </a>
+          }
+        </div>
+        }
+
+        <!-- Urgent/High priority tickets -->
+        @if (escalatedTickets.length > 0) {
+        <div class="px-6 pt-4 pb-2" [class]="unassignedTickets.length > 0 ? 'border-t border-(--border-default)' : ''">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-(--text-muted)">Escalated</span>
+            <span
+              class="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full text-xs font-bold text-white bg-red-500">{{
+              escalatedTickets.length }}</span>
+          </div>
+        </div>
+        <div class="divide-y divide-(--border-muted)">
+          @for (ticket of escalatedTickets; track ticket.id) {
+          <a [routerLink]="['/tickets', ticket.ticketNumber]"
+            class="flex items-center gap-4 px-6 py-3.5 hover:bg-(--hover-bg) transition-colors group">
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg shrink-0"
+              [class]="getPriorityBg(ticket.priority)">
+              <i class="pi pi-flag text-sm" [class]="getPriorityColor(ticket.priority)"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-0.5">
+                <span class="text-xs font-mono text-(--text-muted)">#{{ ticket.ticketNumber }}</span>
+                <span class="text-xs px-1.5 py-0.5 rounded"
+                  [class]="getPriorityBg(ticket.priority) + ' ' + getPriorityColor(ticket.priority)">
+                  {{ getPriorityLabel(ticket.priority) }}
+                </span>
+              </div>
+              <p class="font-medium text-(--text-primary) truncate group-hover:text-primary transition-colors text-sm">
+                {{ ticket.subject }}
+              </p>
+              <p class="text-xs text-(--text-muted) mt-0.5">
+                @if (ticket.assignedAgent) {
+                <span>{{ ticket.assignedAgent.name }}</span> ·
+                }
+                {{ getStatusLabel(ticket.status) }} · {{ formatTimeAgo(ticket.createdAt) }}
+              </p>
+            </div>
+            <i class="pi pi-chevron-right text-(--text-muted) group-hover:translate-x-1 transition-transform"></i>
+          </a>
+          }
+        </div>
+        }
+        }
+        } @else if (myTickets.length === 0) {
+        <div class="p-12 text-center">
+          <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-(--bg-muted) mb-4">
+            <i class="pi pi-check-circle text-3xl text-green-500"></i>
+          </div>
+          <p class="font-medium text-(--text-primary)">You're all caught up!</p>
+          <p class="text-sm text-(--text-muted) mt-1">No tickets assigned to you right now</p>
+        </div>
+        } @else {
+        <div class="divide-y divide-(--border-muted)">
+          @for (ticket of myTickets; track ticket.id) {
+          <a [routerLink]="['/tickets', ticket.ticketNumber]"
+            class="flex items-center gap-4 px-6 py-4 hover:bg-(--hover-bg) transition-colors group">
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg shrink-0"
+              [class]="getPriorityBg(ticket.priority)">
+              <i class="pi pi-flag text-sm" [class]="getPriorityColor(ticket.priority)"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-mono text-(--text-muted)">#{{ ticket.ticketNumber }}</span>
+                <span class="text-xs px-1.5 py-0.5 rounded"
+                  [class]="getPriorityBg(ticket.priority) + ' ' + getPriorityColor(ticket.priority)">
+                  {{ getPriorityLabel(ticket.priority) }}
+                </span>
+              </div>
+              <p class="font-medium text-(--text-primary) truncate group-hover:text-primary transition-colors">
+                {{ ticket.subject }}
+              </p>
+              <p class="text-sm text-(--text-muted) truncate">
+                {{ ticket.customer?.name }} · {{ getStatusLabel(ticket.status) }}
+              </p>
+            </div>
+            <i class="pi pi-chevron-right text-(--text-muted) group-hover:translate-x-1 transition-transform"></i>
+          </a>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Right Column - 1/3 width -->
+    <div class="space-y-6">
+      <!-- Recent Activity -->
+      <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-(--border-muted)">
+          <h2 class="font-semibold text-(--text-primary)">Recent Activity</h2>
+          <span class="text-xs text-(--text-muted)">Last 24h</span>
+        </div>
+
+        @if (isLoading()) {
+        <div class="p-6 space-y-4">
+          @for (i of [1, 2, 3, 4]; track i) {
+          <div class="flex items-start gap-3">
+            <p-skeleton shape="circle" size="2rem" />
+            <div class="flex-1">
+              <p-skeleton width="100%" height="0.875rem" styleClass="mb-1" />
+              <p-skeleton width="50%" height="0.75rem" />
+            </div>
+          </div>
+          }
+        </div>
+        } @else if (recentActivity.length > 0) {
+        <div class="max-h-[26rem] overflow-y-auto">
+          <div class="divide-y divide-(--border-muted)">
+            @for (activity of recentActivity; track activity.id) {
+            <a [routerLink]="['/tickets', activity.ticketNumber]"
+              class="flex items-start gap-3 px-6 py-3.5 hover:bg-(--hover-bg) transition-colors group">
+              <div class="flex h-8 w-8 items-center justify-center rounded-full shrink-0 mt-0.5"
+                [class]="getActivityIconBg(activity.type)">
+                <i [class]="getActivityIcon(activity.type) + ' text-xs ' + getActivityIconColor(activity.type)"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 mb-0.5">
+                  <span class="text-[11px] font-mono font-medium px-1.5 py-0.5 rounded bg-(--bg-elevated) text-(--text-secondary)">{{ activity.ticketPrefix ? activity.ticketPrefix + '-' : '#' }}{{ activity.ticketNumber }}</span>
+                  <span class="text-xs text-(--text-muted)">·</span>
+                  <span class="text-xs text-(--text-muted)">{{ formatTimeAgo(activity.timestamp) }}</span>
+                </div>
+                <p class="text-sm font-medium text-(--text-primary) truncate group-hover:underline">{{ activity.subject }}</p>
+                <p class="text-xs text-(--text-secondary) line-clamp-1 mt-0.5">{{ activity.description }}</p>
+                @if (activity.user) {
+                <p class="text-[11px] text-(--text-muted) mt-1">by {{ activity.user.name }}</p>
+                }
+              </div>
+            </a>
+            }
+          </div>
+        </div>
+        } @else {
+        <div class="p-8 text-center text-(--text-muted)">
+          <i class="pi pi-history text-2xl mb-2"></i>
+          <p class="text-sm">No recent activity</p>
+        </div>
+        }
+      </div>
+
+      <!-- Top Performers -->
+      @if (isAdmin()) {
+      <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="pi pi-star-fill text-amber-400"></i>
+          <h2 class="font-semibold text-(--text-primary)">Top Performers</h2>
+        </div>
+
+        @if (isLoading()) {
+        <div class="space-y-4">
+          @for (i of [1, 2, 3]; track i) {
+          <div class="flex items-center gap-3">
+            <p-skeleton shape="circle" size="2.5rem" />
+            <div class="flex-1">
+              <p-skeleton width="60%" height="0.875rem" styleClass="mb-1" />
+              <p-skeleton width="30%" height="0.75rem" />
+            </div>
+          </div>
+          }
+        </div>
+        } @else if (topAgents.length > 0) {
+        <div class="space-y-4">
+          @for (item of topAgents; track item.agent.id; let i = $index) {
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              @if (item.agent.avatar) {
+                <p-avatar [image]="item.agent.avatar" shape="circle" size="normal" />
+              } @else {
+                <p-avatar [label]="item.agent.name.charAt(0)" shape="circle" size="normal"
+                  [style]="{ 'background-color': 'var(--color-tertiary)', 'color': 'var(--color-primary)' }" />
+              }
+              @if (i < 3) { <div
+                class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold"
+                [class]="i === 0 ? 'bg-amber-400 text-amber-900' : i === 1 ? 'bg-gray-300 text-gray-700' : 'bg-amber-600 text-white'">
+                {{ i + 1 }}
+            </div>
+            }
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-(--text-primary) truncate">{{ item.agent.name }}</p>
+            <div class="flex items-center gap-2 mt-0.5">
+              <div class="flex-1 h-1.5 bg-(--bg-muted) rounded-full overflow-hidden">
+                <div class="h-full rounded-full" style="background-color: var(--color-primary)"
+                  [style.width.%]="getAgentBarWidth(item.resolvedCount)"></div>
+              </div>
+              <span class="text-xs font-semibold text-(--text-primary)">{{ item.resolvedCount }}</span>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+      } @else {
+      <div class="text-center py-8 text-(--text-muted)">
+        <i class="pi pi-users text-2xl mb-2"></i>
+        <p class="text-sm">No resolved tickets yet</p>
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>
+</div>

@@ -1,0 +1,230 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-(--text-primary)">SLA Policies</h1>
+      <p class="mt-1 text-sm text-(--text-secondary)">
+        Define service level agreements to ensure timely responses and resolutions
+      </p>
+    </div>
+    <p-button
+      label="Create Policy"
+      icon="pi pi-plus"
+      (onClick)="openNewPolicyDialog()"
+    />
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <!-- Active Policies -->
+    <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-5">
+      <div class="flex items-center gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 dark:bg-green-900/30">
+          <i class="pi pi-check-circle text-xl text-green-600 dark:text-green-400"></i>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-(--text-primary)">{{ activePoliciesCount() }}</p>
+          <p class="text-sm text-(--text-secondary)">Active Policies</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Policies -->
+    <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-5">
+      <div class="flex items-center gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30">
+          <i class="pi pi-file text-xl text-blue-600 dark:text-blue-400"></i>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-(--text-primary)">{{ totalPoliciesCount() }}</p>
+          <p class="text-sm text-(--text-secondary)">Total Policies</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Help -->
+    <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-5">
+      <div class="flex items-center gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-900/30">
+          <i class="pi pi-question-circle text-xl text-purple-600 dark:text-purple-400"></i>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-(--text-primary)">Need Help?</p>
+          <a href="/knowledge-base/article/setup-sla-policies" class="text-sm text-(--color-primary) hover:underline">
+            View SLA Setup Guide
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Policies List -->
+  <div class="space-y-4">
+    @if (isLoading()) {
+      <!-- Loading Skeletons -->
+      @for (i of [1, 2, 3]; track i) {
+        <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1 space-y-3">
+              <p-skeleton width="200px" height="1.5rem" />
+              <p-skeleton width="300px" height="1rem" />
+              <div class="flex gap-2">
+                <p-skeleton width="80px" height="1.5rem" styleClass="rounded-full" />
+                <p-skeleton width="80px" height="1.5rem" styleClass="rounded-full" />
+              </div>
+            </div>
+            <p-skeleton width="32px" height="32px" styleClass="rounded-lg" />
+          </div>
+        </div>
+      }
+    } @else if (policies().length === 0) {
+      <!-- Empty State -->
+      <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-12 text-center">
+        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-(--bg-elevated)">
+          <i class="pi pi-clock text-3xl text-(--text-muted)"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-(--text-primary)">No SLA Policies Yet</h3>
+        <p class="mt-2 text-(--text-secondary)">
+          Create your first SLA policy to start tracking response and resolution times.
+        </p>
+        <p-button
+          label="Create Your First Policy"
+          icon="pi pi-plus"
+          class="mt-6"
+          (onClick)="openNewPolicyDialog()"
+        />
+      </div>
+    } @else {
+      <!-- Policy Cards -->
+      @for (policy of policies(); track policy.id) {
+        <div 
+          class="group rounded-2xl border border-(--border-default) bg-(--bg-surface) transition-all hover:border-(--color-primary) hover:shadow-md"
+          [class.opacity-60]="!policy.isActive"
+        >
+          <!-- Policy Header -->
+          <div class="flex items-start justify-between gap-4 p-6">
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="text-lg font-semibold text-(--text-primary)">{{ policy.name }}</h3>
+                @if (policy.isDefault) {
+                  <p-tag value="Default" severity="info" [rounded]="true" />
+                }
+                @if (!policy.isActive) {
+                  <p-tag value="Inactive" severity="secondary" [rounded]="true" />
+                }
+              </div>
+              <p class="mt-1 text-sm text-(--text-secondary)">{{ policy.description }}</p>
+              
+              <!-- Quick Info -->
+              <div class="mt-4 flex flex-wrap items-center gap-4 text-sm">
+                <div class="flex items-center gap-1.5 text-(--text-secondary)">
+                  <i class="pi pi-clock"></i>
+                  <span>{{ getBusinessHoursSummary(policy) }}</span>
+                </div>
+                @if (policy.appliesTo.channels?.length) {
+                  <div class="flex items-center gap-1.5 text-(--text-secondary)">
+                    <i class="pi pi-inbox"></i>
+                    <span>{{ policy.appliesTo.channels!.length }} channels</span>
+                  </div>
+                }
+                @if (policy.appliesTo.customerTiers?.length) {
+                  <div class="flex items-center gap-1.5 text-(--text-secondary)">
+                    <i class="pi pi-users"></i>
+                    <span>{{ policy.appliesTo.customerTiers!.join(', ') }}</span>
+                  </div>
+                }
+                @if (policy.breachActions.autoEscalate) {
+                  <div class="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                    <i class="pi pi-arrow-up"></i>
+                    <span>Auto-escalate</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Actions Menu -->
+            <p-menu #menu [popup]="true" [model]="getPolicyMenuItems(policy)" />
+            <button
+              (click)="menu.toggle($event)"
+              class="flex h-9 w-9 items-center justify-center rounded-lg text-(--text-secondary) transition-colors hover:bg-(--hover-bg)"
+              pTooltip="More actions"
+              tooltipPosition="top"
+            >
+              <i class="pi pi-ellipsis-v"></i>
+            </button>
+          </div>
+
+          <!-- SLA Targets Grid -->
+          <div class="border-t border-(--border-default) bg-(--bg-muted) p-6">
+            <div class="mb-4 flex items-center gap-2">
+              <i class="pi pi-stopwatch text-(--text-muted)"></i>
+              <span class="text-sm font-medium text-(--text-secondary)">Response & Resolution Targets</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              @for (target of policy.targets; track target.priority) {
+                <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-4">
+                  <div class="mb-2 flex items-center gap-2">
+                    @switch (target.priority) {
+                      @case ('urgent') {
+                        <span class="h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                        <span class="text-xs font-semibold uppercase text-red-600 dark:text-red-400">Urgent</span>
+                      }
+                      @case ('high') {
+                        <span class="h-2.5 w-2.5 rounded-full bg-orange-500"></span>
+                        <span class="text-xs font-semibold uppercase text-orange-600 dark:text-orange-400">High</span>
+                      }
+                      @case ('medium') {
+                        <span class="h-2.5 w-2.5 rounded-full bg-yellow-500"></span>
+                        <span class="text-xs font-semibold uppercase text-yellow-600 dark:text-yellow-400">Medium</span>
+                      }
+                      @case ('low') {
+                        <span class="h-2.5 w-2.5 rounded-full bg-green-500"></span>
+                        <span class="text-xs font-semibold uppercase text-green-600 dark:text-green-400">Low</span>
+                      }
+                    }
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs text-(--text-muted)">Response</span>
+                      <span class="text-sm font-semibold text-(--text-primary)">{{ formatTime(target.firstResponseTime) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs text-(--text-muted)">Resolution</span>
+                      <span class="text-sm font-semibold text-(--text-primary)">{{ formatTime(target.resolutionTime) }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="flex items-center justify-between border-t border-(--border-default) px-6 py-3">
+            <span class="text-xs text-(--text-muted)">
+              Updated {{ formatDate(policy.updatedAt) }}
+            </span>
+            <div class="flex items-center gap-2">
+              <button
+                (click)="openEditPolicyDialog(policy)"
+                class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-(--color-primary) transition-colors hover:bg-(--hover-bg)"
+              >
+                <i class="pi pi-pencil text-xs"></i>
+                Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- Policy Dialog -->
+<app-sla-policy-dialog
+  [(visible)]="showPolicyDialog"
+  [policy]="editingPolicy()"
+  (save)="onPolicySave($event)"
+/>
+
+<!-- Confirm Dialog -->
+<p-confirmDialog />

@@ -1,0 +1,271 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="text-center lg:text-left">
+    @if (currentStep() <= 2) {
+      <div class="flex items-center gap-2 mb-4">
+        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold text-white"
+              style="background-color: var(--color-primary)">
+          {{ currentStep() }}
+        </span>
+        <span class="text-sm text-(--text-muted)">of {{ totalSteps - 1 }}</span>
+      </div>
+    }
+
+    @switch (currentStep()) {
+      @case (1) {
+        <h2 class="text-2xl font-bold text-(--text-primary)">Create your workspace</h2>
+        <p class="mt-2 text-(--text-secondary)">Set up your team's support hub in seconds</p>
+      }
+      @case (2) {
+        <h2 class="text-2xl font-bold text-(--text-primary)">Create admin account</h2>
+        <p class="mt-2 text-(--text-secondary)">Set up the first administrator for your workspace</p>
+      }
+      @case (3) {
+        <!-- Success state has its own header below -->
+      }
+    }
+  </div>
+
+  <!-- Error Message -->
+  @if (error()) {
+    <p-message severity="error" [text]="error()!" styleClass="w-full" />
+  }
+
+  <!-- Step 1: Workspace Details -->
+  @if (currentStep() === 1) {
+    <form (ngSubmit)="nextStep()" class="space-y-5">
+      <!-- Workspace Name -->
+      <div class="space-y-2">
+        <label for="workspaceName" class="block text-sm font-medium text-(--text-primary)">
+          Workspace name
+        </label>
+        <input
+          pInputText
+          id="workspaceName"
+          type="text"
+          [(ngModel)]="workspaceName"
+          (ngModelChange)="onWorkspaceNameInput()"
+          name="workspaceName"
+          placeholder="e.g. Acme Support"
+          class="w-full"
+          autocomplete="organization"
+          maxlength="100"
+        />
+        <p class="text-xs text-(--text-muted)">This is your team or company name</p>
+      </div>
+
+      <!-- Slug -->
+      <div class="space-y-2">
+        <label for="slug" class="block text-sm font-medium text-(--text-primary)">
+          Workspace URL
+        </label>
+        <div class="flex items-center rounded-md border border-(--border-default) overflow-hidden
+                    focus-within:ring-2 focus-within:ring-(--color-primary)/30 focus-within:border-(--color-primary)
+                    transition-all">
+          <span class="px-3 py-2.5 bg-(--bg-muted) text-sm text-(--text-muted) border-r border-(--border-default) select-none whitespace-nowrap">
+            flashdesk.io/
+          </span>
+          <input
+            type="text"
+            id="slug"
+            [(ngModel)]="slug"
+            (ngModelChange)="onSlugInput()"
+            name="slug"
+            placeholder="acme-support"
+            class="flex-1 px-3 py-2.5 bg-transparent text-sm text-(--text-primary) outline-none border-none"
+            maxlength="48"
+          />
+        </div>
+        <p class="text-xs text-(--text-muted)">Only lowercase letters, numbers, and hyphens</p>
+      </div>
+
+      <!-- Submit -->
+      <p-button
+        type="submit"
+        label="Continue"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        styleClass="w-full"
+        [disabled]="!step1Valid()"
+      />
+    </form>
+  }
+
+  <!-- Step 2: Admin Account -->
+  @if (currentStep() === 2) {
+    <form (ngSubmit)="onSubmit()" class="space-y-5">
+      <!-- Full Name -->
+      <div class="space-y-2">
+        <label for="adminName" class="block text-sm font-medium text-(--text-primary)">
+          Full name
+        </label>
+        <input
+          pInputText
+          id="adminName"
+          type="text"
+          [(ngModel)]="adminName"
+          name="adminName"
+          placeholder="Jane Smith"
+          class="w-full"
+          autocomplete="name"
+        />
+      </div>
+
+      <!-- Email -->
+      <div class="space-y-2">
+        <label for="adminEmail" class="block text-sm font-medium text-(--text-primary)">
+          Email address
+        </label>
+        <input
+          pInputText
+          id="adminEmail"
+          type="email"
+          [(ngModel)]="adminEmail"
+          name="adminEmail"
+          placeholder="jane@acme.com"
+          class="w-full"
+          autocomplete="email"
+        />
+      </div>
+
+      <!-- Password -->
+      <div class="space-y-2">
+        <label for="adminPassword" class="block text-sm font-medium text-(--text-primary)">
+          Password
+        </label>
+        <div class="relative">
+          <input
+            pInputText
+            id="adminPassword"
+            [type]="showPassword() ? 'text' : 'password'"
+            [(ngModel)]="adminPassword"
+            name="adminPassword"
+            placeholder="Min. 8 characters"
+            class="w-full pr-10"
+            autocomplete="new-password"
+          />
+          <button
+            type="button"
+            (click)="togglePasswordVisibility()"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-(--text-muted) hover:text-(--text-primary) transition-colors"
+          >
+            <i [class]="showPassword() ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+          </button>
+        </div>
+        <!-- Password strength indicator -->
+        <div class="flex gap-1 mt-1">
+          @for (i of [1,2,3,4]; track i) {
+            <div
+              class="h-1 flex-1 rounded-full transition-colors"
+              [ngClass]="{
+                'bg-(--border-default)': adminPassword.length === 0,
+                'bg-red-400': adminPassword.length > 0 && adminPassword.length < 8 && i <= 1,
+                'bg-orange-400': adminPassword.length >= 8 && adminPassword.length < 12 && i <= 2,
+                'bg-yellow-400': adminPassword.length >= 12 && adminPassword.length < 16 && i <= 3,
+                'bg-green-500': adminPassword.length >= 16
+              }"
+            ></div>
+          }
+        </div>
+        <p class="text-xs text-(--text-muted)">Use at least 8 characters</p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-3">
+        <p-button
+          type="button"
+          label="Back"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="prevStep()"
+          styleClass="flex-1"
+        />
+        <p-button
+          type="submit"
+          label="Create workspace"
+          icon="pi pi-check"
+          iconPos="right"
+          styleClass="flex-1"
+          [loading]="isLoading()"
+          [disabled]="!step2Valid() || isLoading()"
+        />
+      </div>
+    </form>
+  }
+
+  <!-- Step 3: Success -->
+  @if (currentStep() === 3) {
+    <div class="text-center space-y-6 py-4">
+      <!-- Success Icon -->
+      <div class="flex items-center justify-center">
+        <div class="relative">
+          <div class="w-20 h-20 rounded-full flex items-center justify-center"
+               style="background: color-mix(in srgb, var(--color-primary) 12%, transparent)">
+            <div class="w-14 h-14 rounded-full flex items-center justify-center"
+                 style="background: color-mix(in srgb, var(--color-primary) 20%, transparent)">
+              <i class="pi pi-check-circle text-3xl" style="color: var(--color-primary)"></i>
+            </div>
+          </div>
+          <!-- Sparkles -->
+          <div class="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-pulse" style="background-color: var(--color-primary)"></div>
+          <div class="absolute -bottom-0.5 -left-2 w-2 h-2 rounded-full animate-pulse delay-150" style="background-color: var(--color-primary); opacity: 0.6"></div>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <h2 class="text-2xl font-bold text-(--text-primary)">You're all set!</h2>
+        <p class="text-(--text-secondary) max-w-sm mx-auto">
+          <span class="font-semibold" style="color: var(--color-primary)">{{ workspaceName }}</span>
+          workspace has been created. Sign in to start managing your support.
+        </p>
+      </div>
+
+      <!-- Workspace summary card -->
+      <div class="rounded-xl border border-(--border-default) bg-(--bg-muted) p-4 text-left space-y-3 max-w-xs mx-auto">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-lg"
+               style="background-color: var(--color-primary)">
+            {{ workspaceName.charAt(0).toUpperCase() }}
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-(--text-primary)">{{ workspaceName }}</p>
+            <p class="text-xs text-(--text-muted)">flashdesk.io/{{ slug }}</p>
+          </div>
+        </div>
+        <div class="border-t border-(--border-default) pt-3 space-y-1.5">
+          <div class="flex items-center gap-2 text-xs text-(--text-secondary)">
+            <i class="pi pi-user text-xs" style="color: var(--color-primary)"></i>
+            <span>{{ adminName }}</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-(--text-secondary)">
+            <i class="pi pi-envelope text-xs" style="color: var(--color-primary)"></i>
+            <span>{{ adminEmail }}</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-(--text-secondary)">
+            <i class="pi pi-shield text-xs" style="color: var(--color-primary)"></i>
+            <span>Administrator</span>
+          </div>
+        </div>
+      </div>
+
+      <p-button
+        label="Go to login"
+        icon="pi pi-sign-in"
+        iconPos="right"
+        styleClass="w-full"
+        (onClick)="goToLogin()"
+      />
+    </div>
+  }
+
+  <!-- Footer note (steps 1 & 2 only) -->
+  @if (currentStep() <= 2) {
+    <p class="text-center text-sm text-(--text-muted)">
+      Already have a workspace?
+      <a routerLink="/login" class="font-medium transition-colors" style="color: var(--color-primary)">
+        Sign in
+      </a>
+    </p>
+  }
+</div>

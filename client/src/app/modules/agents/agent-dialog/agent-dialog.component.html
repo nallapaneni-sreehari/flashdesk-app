@@ -1,0 +1,135 @@
+<p-dialog [header]="dialogTitle" [(visible)]="visible" [modal]="true" [closable]="true" [draggable]="false"
+    [resizable]="false" [style]="{ width: '500px' }" (onHide)="close()" styleClass="agent-dialog">
+
+    <div class="flex flex-col gap-5">
+        <!-- Basic Info Section -->
+        <div>
+            <h4 class="mb-3 text-sm font-semibold text-(--text-primary) flex items-center gap-2">
+                <i class="pi pi-user text-(--text-muted)"></i>
+                Basic Information
+            </h4>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-medium text-(--text-secondary)">First Name *</label>
+                    <input pInputText [(ngModel)]="firstName" placeholder="John" class="w-full" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-medium text-(--text-secondary)">Last Name *</label>
+                    <input pInputText [(ngModel)]="lastName" placeholder="Doe" class="w-full" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div>
+            <h4 class="mb-3 text-sm font-semibold text-(--text-primary) flex items-center gap-2">
+                <i class="pi pi-envelope text-(--text-muted)"></i>
+                Contact Details
+            </h4>
+            <div class="grid grid-cols-1 gap-4">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-medium text-(--text-secondary)">Email Address *</label>
+                    <input pInputText [(ngModel)]="email" placeholder="john.doe@company.com" type="email"
+                        class="w-full" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-medium text-(--text-secondary)">Mobile Number
+                        <span class="text-(--text-muted)">(optional)</span>
+                    </label>
+                    <input pInputText [(ngModel)]="mobile" placeholder="+1 555-000-0000" class="w-full" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Role & Department Section -->
+        <div>
+            <h4 class="mb-3 text-sm font-semibold text-(--text-primary) flex items-center gap-2">
+                <i class="pi pi-briefcase text-(--text-muted)"></i>
+                Role & Assignment
+            </h4>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-medium text-(--text-secondary)">Role *</label>
+                    <p-select [options]="roleOptions" [(ngModel)]="role" optionLabel="label" optionValue="value"
+                        class="w-full" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-medium text-(--text-secondary)">Department</label>
+                    <p-select [options]="departmentOptions" [(ngModel)]="department" optionLabel="label"
+                        optionValue="value" [showClear]="true" placeholder="Select..." class="w-full" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Section (only for edit mode) -->
+        @if (isEditing) {
+        <div>
+            <h4 class="mb-3 text-sm font-semibold text-(--text-primary) flex items-center gap-2">
+                <i class="pi pi-circle-fill text-(--text-muted) text-xs"></i>
+                Status
+            </h4>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-(--text-secondary)">Agent Status</label>
+                <p-select [options]="statusOptions" [(ngModel)]="status" optionLabel="label" optionValue="value"
+                    class="w-full" />
+            </div>
+        </div>
+        }
+
+        <!-- Password Section (only for new agent) -->
+        @if (!isEditing) {
+        <div>
+            <h4 class="mb-3 text-sm font-semibold text-(--text-primary) flex items-center gap-2">
+                <i class="pi pi-lock text-(--text-muted)"></i>
+                Authentication
+            </h4>
+            <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-1">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-medium text-(--text-secondary)">
+                            Password
+                        </label>
+                        <button type="button" (click)="regeneratePassword()"
+                            class="text-xs font-medium hover:underline cursor-pointer flex items-center gap-1"
+                            style="color: var(--color-primary)">
+                            <i class="pi pi-refresh text-[10px]"></i>
+                            Regenerate
+                        </button>
+                    </div>
+                    <p-password [(ngModel)]="password" [toggleMask]="true" [feedback]="true" placeholder="••••••••"
+                        styleClass="w-full" inputStyleClass="w-full" />
+                    <p class="text-[11px] text-(--text-muted)">Auto-generated secure password. You can edit it or regenerate a new one.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <p-checkbox [(ngModel)]="sendInvite" [binary]="true" inputId="sendInvite" />
+                    <label for="sendInvite" class="text-sm text-(--text-primary) cursor-pointer">
+                        Send invitation email to agent
+                    </label>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- Info Note -->
+        <div class="rounded-lg bg-(--bg-elevated) p-3 flex items-start gap-2">
+            <i class="pi pi-info-circle text-(--text-muted) mt-0.5"></i>
+            <p class="text-xs text-(--text-secondary)">
+                @if (isEditing) {
+                Changes will be applied immediately. The agent will be notified of any role or status changes.
+                } @else if (sendInvite) {
+                The agent will receive a welcome email with their login credentials.
+                } @else {
+                The agent account will be created. Make sure to share the login credentials manually.
+                }
+            </p>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2">
+            <p-button label="Cancel" [outlined]="true" severity="secondary" (onClick)="close()" />
+            <p-button [label]="isEditing ? 'Save Changes' : 'Create Agent'" [icon]="isEditing ? 'pi pi-check' : 'pi pi-plus'"
+                [disabled]="!isFormValid" (onClick)="submit()" />
+        </div>
+    </ng-template>
+</p-dialog>

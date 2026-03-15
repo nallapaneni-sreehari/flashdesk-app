@@ -1,0 +1,50 @@
+<p-button
+  icon="pi pi-palette"
+  [text]="true"
+  [rounded]="true"
+  severity="secondary"
+  (onClick)="themePanel.toggle($event)"
+  pTooltip="Theme"
+  tooltipPosition="bottom"
+/>
+
+<p-popover #themePanel>
+  <div class="w-64 p-2">
+    <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Color Theme</div>
+    <div class="space-y-1">
+      @for (theme of themeService.themes; track theme.name) {
+        <button
+          (click)="selectTheme(theme); themePanel.hide()"
+          class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-[var(--hover-bg)]"
+          [class.bg-[var(--hover-bg)]]="isSelected(theme)"
+        >
+          <!-- Color Preview -->
+          <div class="flex -space-x-1">
+            <span
+              class="h-5 w-5 rounded-full border-2 border-[var(--bg-surface)] shadow-sm"
+              [style.background-color]="theme.primary"
+            ></span>
+            <span
+              class="h-5 w-5 rounded-full border-2 border-[var(--bg-surface)] shadow-sm"
+              [style.background-color]="theme.secondary"
+            ></span>
+            <span
+              class="h-5 w-5 rounded-full border-2 border-[var(--bg-surface)] shadow-sm"
+              [style.background-color]="theme.tertiary"
+            ></span>
+          </div>
+
+          <!-- Theme Name -->
+          <span class="flex-1 text-sm font-medium text-[var(--text-primary)]">
+            {{ theme.name }}
+          </span>
+
+          <!-- Selected Check -->
+          @if (isSelected(theme)) {
+            <i class="pi pi-check text-sm" [style.color]="theme.primary"></i>
+          }
+        </button>
+      }
+    </div>
+  </div>
+</p-popover>

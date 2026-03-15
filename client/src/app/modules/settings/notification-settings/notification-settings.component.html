@@ -1,0 +1,185 @@
+<div class="mx-auto max-w-3xl space-y-8">
+  <!-- Page Header -->
+  <div>
+    <h2 class="text-2xl font-bold text-(--text-primary)">Notifications</h2>
+    <p class="mt-1 text-(--text-secondary)">Choose how and when you want to be notified</p>
+  </div>
+
+  <!-- Notification Channels -->
+  <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+    <h3 class="mb-6 text-lg font-semibold text-(--text-primary)">Notification Channels</h3>
+
+    <div class="space-y-4">
+      @for (channel of channels; track channel.id) {
+        <div class="flex items-center justify-between rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+          <div class="flex items-center gap-4">
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg"
+                 [class]="channel.enabled ? 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)]' : 'bg-(--bg-elevated)'"
+                 [style.color]="channel.enabled ? 'var(--color-primary)' : 'var(--text-secondary)'">
+              <i [class]="channel.icon" class="text-lg"></i>
+            </div>
+            <div>
+              <div class="font-medium text-(--text-primary)">{{ channel.label }}</div>
+              <div class="text-sm text-(--text-secondary)">{{ channel.description }}</div>
+            </div>
+          </div>
+          <p-toggleSwitch [(ngModel)]="channel.enabled" />
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Email Digest Frequency -->
+  <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+    <h3 class="mb-2 text-lg font-semibold text-(--text-primary)">Email Digest</h3>
+    <p class="mb-6 text-sm text-(--text-secondary)">
+      Control how often you receive email summaries of your activity
+    </p>
+
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+      <div class="flex-1">
+        <label class="mb-2 block text-sm font-medium text-(--text-primary)">
+          Digest Frequency
+        </label>
+        <p-select
+          [(ngModel)]="digestFrequency"
+          [options]="digestOptions"
+          optionLabel="label"
+          optionValue="value"
+          class="w-full sm:w-64"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiet Hours -->
+  <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+    <div class="flex items-start justify-between gap-4">
+      <div class="flex items-start gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-(--bg-elevated) text-(--text-secondary)">
+          <i class="pi pi-moon text-xl"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-(--text-primary)">Quiet Hours</h3>
+          <p class="mt-1 text-sm text-(--text-secondary)">
+            Pause notifications during specific hours. You'll still receive urgent alerts.
+          </p>
+        </div>
+      </div>
+      <p-toggleSwitch [(ngModel)]="quietHoursEnabled" />
+    </div>
+
+    @if (quietHoursEnabled()) {
+      <div class="mt-6 flex flex-col gap-4 rounded-xl bg-(--bg-muted) p-4 sm:flex-row sm:items-center">
+        <div class="flex-1">
+          <label class="mb-2 block text-sm font-medium text-(--text-primary)">From</label>
+          <p-select
+            [(ngModel)]="quietHoursStart"
+            [options]="timeOptions"
+            optionLabel="label"
+            optionValue="value"
+            class="w-full"
+          />
+        </div>
+        <div class="hidden items-center justify-center sm:flex">
+          <i class="pi pi-arrow-right text-(--text-muted)"></i>
+        </div>
+        <div class="flex-1">
+          <label class="mb-2 block text-sm font-medium text-(--text-primary)">To</label>
+          <p-select
+            [(ngModel)]="quietHoursEnd"
+            [options]="timeOptions"
+            optionLabel="label"
+            optionValue="value"
+            class="w-full"
+          />
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Notification Categories -->
+  <div class="rounded-2xl border border-(--border-default) bg-(--bg-surface) p-6">
+    <h3 class="mb-2 text-lg font-semibold text-(--text-primary)">Notification Types</h3>
+    <p class="mb-6 text-sm text-(--text-secondary)">
+      Fine-tune notifications for specific events
+    </p>
+
+    <!-- Table Header -->
+    <div class="mb-4 hidden grid-cols-12 gap-4 rounded-lg bg-(--bg-muted) px-4 py-3 text-sm font-medium text-(--text-secondary) lg:grid">
+      <div class="col-span-6">Event</div>
+      <div class="col-span-2 text-center">Email</div>
+      <div class="col-span-2 text-center">Push</div>
+      <div class="col-span-2 text-center">In-App</div>
+    </div>
+
+    <!-- Categories -->
+    <div class="space-y-2">
+      @for (category of categories; track category.id) {
+        <div class="grid grid-cols-1 items-center gap-4 rounded-xl border border-(--border-default) p-4 lg:grid-cols-12">
+          <!-- Event Info -->
+          <div class="lg:col-span-6">
+            <div class="font-medium text-(--text-primary)">{{ category.label }}</div>
+            <div class="text-sm text-(--text-secondary)">{{ category.description }}</div>
+          </div>
+
+          <!-- Mobile Toggle Labels -->
+          <div class="flex flex-wrap items-center gap-4 lg:col-span-6 lg:contents">
+            <div class="flex items-center gap-2 lg:col-span-2 lg:justify-center">
+              <span class="text-sm text-(--text-muted) lg:hidden">Email</span>
+              <p-toggleSwitch [(ngModel)]="category.email" />
+            </div>
+            <div class="flex items-center gap-2 lg:col-span-2 lg:justify-center">
+              <span class="text-sm text-(--text-muted) lg:hidden">Push</span>
+              <p-toggleSwitch [(ngModel)]="category.push" />
+            </div>
+            <div class="flex items-center gap-2 lg:col-span-2 lg:justify-center">
+              <span class="text-sm text-(--text-muted) lg:hidden">In-App</span>
+              <p-toggleSwitch [(ngModel)]="category.inApp" />
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="mt-4 flex flex-wrap gap-2">
+      <p-button
+        label="Enable all email"
+        size="small"
+        [text]="true"
+        severity="secondary"
+        (onClick)="toggleAll('email', true)"
+      />
+      <p-button
+        label="Enable all push"
+        size="small"
+        [text]="true"
+        severity="secondary"
+        (onClick)="toggleAll('push', true)"
+      />
+      <p-button
+        label="Disable all"
+        size="small"
+        [text]="true"
+        severity="secondary"
+        (onClick)="toggleAll('email', false); toggleAll('push', false); toggleAll('inApp', false)"
+      />
+    </div>
+  </div>
+
+  <!-- Save Button -->
+  <div class="flex justify-end gap-3">
+    <p-button
+      label="Reset to defaults"
+      severity="secondary"
+      [outlined]="true"
+    />
+    <p-button
+      label="Save Preferences"
+      icon="pi pi-check"
+      [loading]="isSaving()"
+      (onClick)="savePreferences()"
+    />
+  </div>
+</div>

@@ -1,0 +1,136 @@
+<div class="flex min-h-screen">
+  <!-- Left Panel - Branding -->
+  <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden" style="background: linear-gradient(to bottom right, var(--color-primary), color-mix(in srgb, var(--color-primary) 70%, black));">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 opacity-10">
+      <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+      </svg>
+    </div>
+    
+    <!-- Content -->
+    <div class="relative z-10 flex flex-col justify-between p-12 text-white">
+      <!-- Logo -->
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+          <i class="pi pi-bolt text-xl text-white"></i>
+        </div>
+        <span class="text-2xl font-bold tracking-tight">FlashDesk</span>
+      </div>
+
+      <!-- Main Content -->
+      <div class="space-y-8">
+        <div class="space-y-4">
+          <h1 class="text-4xl font-bold leading-tight">
+            Support made<br/>
+            <span class="text-white/90">simple & fast</span>
+          </h1>
+          <p class="text-lg text-white/80 max-w-md">
+            Streamline your customer support with powerful ticketing, automation, and real-time collaboration.
+          </p>
+        </div>
+
+        <!-- Features -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
+              <i class="pi pi-ticket text-sm"></i>
+            </div>
+            <span class="text-white/90">Unified ticket management</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
+              <i class="pi pi-bolt text-sm"></i>
+            </div>
+            <span class="text-white/90">Lightning-fast responses</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
+              <i class="pi pi-users text-sm"></i>
+            </div>
+            <span class="text-white/90">Team collaboration built-in</span>
+          </div>
+        </div>
+
+        <!-- Testimonials Marquee -->
+        <div 
+          class="relative overflow-hidden"
+          (mouseenter)="pauseMarquee()"
+          (mouseleave)="resumeMarquee()"
+        >
+          <!-- Gradient Masks -->
+          <div class="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-(--color-primary) to-transparent z-10 pointer-events-none"></div>
+          <div class="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[color-mix(in_srgb,var(--color-primary)_70%,black)] to-transparent z-10 pointer-events-none"></div>
+          
+          <!-- Scrolling Track -->
+          <div 
+            class="flex gap-4 py-2"
+            [class]="isMarqueePaused() ? 'animate-paused' : ''"
+            style="animation: marquee 30s linear infinite;"
+          >
+            <!-- Duplicate testimonials for seamless loop -->
+            @for (testimonial of duplicatedTestimonials; track $index) {
+              <div class="flex-shrink-0 w-64 rounded-xl bg-white/10 backdrop-blur-sm p-4 border border-white/10">
+                <!-- Stars -->
+                <div class="flex gap-0.5 mb-2">
+                  @for (star of getStars(testimonial.rating); track $index) {
+                    <i class="pi text-[10px]" [class]="star ? 'pi-star-fill text-yellow-400' : 'pi-star text-white/40'"></i>
+                  }
+                </div>
+                
+                <!-- Comment -->
+                <p class="text-white/90 text-xs leading-relaxed mb-3 line-clamp-2">
+                  "{{ testimonial.comment }}"
+                </p>
+                
+                <!-- User Info -->
+                <div class="flex items-center gap-2">
+                  <img 
+                    [src]="testimonial.avatar" 
+                    [alt]="testimonial.name"
+                    class="w-7 h-7 rounded-full border border-white/30"
+                  />
+                  <div>
+                    <p class="text-white font-medium text-xs">{{ testimonial.name }}</p>
+                    <p class="text-white/60 text-[10px]">{{ testimonial.role }}</p>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="text-sm text-white/60">
+        © {{ currentYear }} FlashDesk. All rights reserved.
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Panel - Auth Form -->
+  <div class="flex w-full lg:w-1/2 items-center justify-center p-8 bg-(--bg-base)">
+    <div class="w-full max-w-md">
+      <!-- Mobile Logo -->
+      <div class="lg:hidden flex items-center justify-center gap-3 mb-8">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
+          <i class="pi pi-bolt text-xl text-white"></i>
+        </div>
+        <span class="text-2xl font-bold tracking-tight text-(--text-primary)">FlashDesk</span>
+      </div>
+
+      <!-- Router Outlet for Login/Register/ForgotPassword pages -->
+      <router-outlet></router-outlet>
+
+      <!-- Mobile Footer -->
+      <div class="lg:hidden mt-8 text-center text-sm text-(--text-muted)">
+        © {{ currentYear }} FlashDesk. All rights reserved.
+      </div>
+    </div>
+  </div>
+</div>

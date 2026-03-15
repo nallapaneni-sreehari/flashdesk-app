@@ -1,0 +1,351 @@
+<p-dialog [header]="dialogTitle" [(visible)]="visible" [modal]="true" [closable]="true" [draggable]="false"
+    [resizable]="false" [style]="{ width: '900px', maxHeight: '90vh' }" (onHide)="close()"
+    styleClass="sla-policy-dialog">
+
+    <!-- Tabs Navigation -->
+    <p-tabs [(value)]="activeTab" styleClass="sla-tabs">
+        <p-tablist>
+            <p-tab value="general">
+                <i class="pi pi-file-edit mr-2"></i>
+                General
+            </p-tab>
+            <p-tab value="targets">
+                <i class="pi pi-stopwatch mr-2"></i>
+                SLA Targets
+            </p-tab>
+            <p-tab value="hours">
+                <i class="pi pi-clock mr-2"></i>
+                Business Hours
+            </p-tab>
+            <p-tab value="conditions">
+                <i class="pi pi-filter mr-2"></i>
+                Conditions
+            </p-tab>
+            <p-tab value="actions">
+                <i class="pi pi-bell mr-2"></i>
+                Breach Actions
+            </p-tab>
+        </p-tablist>
+
+        <p-tabpanels>
+            <!-- General Tab -->
+            <p-tabpanel value="general">
+                <div class="space-y-5 py-4">
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-(--text-secondary)">Policy Name *</label>
+                        <input pInputText [(ngModel)]="name" placeholder="e.g., Premium Support SLA"
+                            class="w-full" />
+                    </div>
+
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-(--text-secondary)">Description *</label>
+                        <textarea pTextarea [(ngModel)]="description"
+                            placeholder="Describe when this policy applies and its purpose..." [rows]="3"
+                            [autoResize]="true" class="w-full"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-between rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+                        <div>
+                            <p class="font-medium text-(--text-primary)">Active Policy</p>
+                            <p class="text-sm text-(--text-secondary)">Only active policies are applied to tickets</p>
+                        </div>
+                        <p-toggleSwitch [(ngModel)]="isActive" />
+                    </div>
+
+                    <div class="flex items-center justify-between rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+                        <div>
+                            <p class="font-medium text-(--text-primary)">Set as Default</p>
+                            <p class="text-sm text-(--text-secondary)">Default policy applies when no other policy matches</p>
+                        </div>
+                        <p-toggleSwitch [(ngModel)]="isDefault" />
+                    </div>
+                </div>
+            </p-tabpanel>
+
+            <!-- SLA Targets Tab -->
+            <p-tabpanel value="targets">
+                <div class="space-y-4 py-4">
+                    <div class="rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+                        <div class="flex items-center gap-2 text-sm text-(--text-secondary)">
+                            <i class="pi pi-info-circle"></i>
+                            <span>Times are in minutes. SLA countdown only runs during business hours if enabled.</span>
+                        </div>
+                    </div>
+
+                    @for (target of targets; track target.priority; let i = $index) {
+                        <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-5">
+                            <div class="mb-4 flex items-center gap-3">
+                                <span [class]="getPriorityColor(target.priority) + ' h-3 w-3 rounded-full'"></span>
+                                <span class="text-base font-semibold capitalize text-(--text-primary)">{{ target.priority }} Priority</span>
+                            </div>
+                            <div class="grid grid-cols-1  sm:grid-cols-2">
+                                <div>
+                                    <label class="mb-1.5 block text-xs font-medium text-(--text-secondary)">
+                                        First Response Time
+                                        <i class="pi pi-question-circle ml-1 text-xs"
+                                            pTooltip="Max time to send first response" tooltipPosition="top"></i>
+                                    </label>
+                                    <div class="flex items-center gap-2">
+                                        <p-inputNumber [(ngModel)]="target.firstResponseTime" [min]="1" [max]="10080"
+                                            [showButtons]="true" buttonLayout="horizontal" incrementButtonIcon="pi pi-plus"
+                                            decrementButtonIcon="pi pi-minus" class="w-full" />
+                                        <span class="text-sm text-(--text-muted)">min</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="mb-1.5 block text-xs font-medium text-(--text-secondary)">
+                                        Resolution Time
+                                        <i class="pi pi-question-circle ml-1 text-xs"
+                                            pTooltip="Max time to resolve ticket" tooltipPosition="top"></i>
+                                    </label>
+                                    <div class="flex items-center gap-2">
+                                        <p-inputNumber [(ngModel)]="target.resolutionTime" [min]="1" [max]="43200"
+                                            [showButtons]="true" buttonLayout="horizontal" incrementButtonIcon="pi pi-plus"
+                                            decrementButtonIcon="pi pi-minus" class="w-full" />
+                                        <span class="text-sm text-(--text-muted)">min</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="mb-1.5 block text-xs font-medium text-(--text-secondary)">
+                                        Escalate Before Breach
+                                        <i class="pi pi-question-circle ml-1 text-xs"
+                                            pTooltip="Minutes before breach to trigger escalation" tooltipPosition="top"></i>
+                                    </label>
+                                    <div class="flex items-center gap-2">
+                                        <p-inputNumber [(ngModel)]="target.escalateAfter" [min]="0" [max]="1440"
+                                            [showButtons]="true" buttonLayout="horizontal" incrementButtonIcon="pi pi-plus"
+                                            decrementButtonIcon="pi pi-minus" class="w-full" />
+                                        <span class="text-sm text-(--text-muted)">min</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </p-tabpanel>
+
+            <!-- Business Hours Tab -->
+            <p-tabpanel value="hours">
+                <div class="space-y-5 py-4">
+                    <div class="flex items-center justify-between rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+                        <div>
+                            <p class="font-medium text-(--text-primary)">Use Business Hours</p>
+                            <p class="text-sm text-(--text-secondary)">SLA countdown pauses outside business hours</p>
+                        </div>
+                        <p-toggleSwitch [(ngModel)]="businessHoursEnabled" />
+                    </div>
+
+                    @if (businessHoursEnabled) {
+                        <div>
+                            <label class="mb-1.5 block text-sm font-medium text-(--text-secondary)">Timezone</label>
+                            <p-select [options]="timezoneOptions" [(ngModel)]="timezone" optionLabel="label"
+                                optionValue="value" class="w-full" />
+                        </div>
+
+                        <!-- Weekly Schedule -->
+                        <div>
+                            <div class="mb-3 flex items-center justify-between">
+                                <label class="text-sm font-medium text-(--text-secondary)">Weekly Schedule</label>
+                            </div>
+                            <div class="space-y-2">
+                                @for (day of schedule; track day.day) {
+                                    <div class="flex items-center gap-4 rounded-lg border border-(--border-default) bg-(--bg-surface) p-3">
+                                        <div class="w-24">
+                                            <p-toggleSwitch [(ngModel)]="day.enabled" />
+                                        </div>
+                                        <span class="w-24 font-medium text-(--text-primary)" [class.text-(--text-muted)]="!day.enabled">
+                                            {{ formatDayName(day.day) }}
+                                        </span>
+                                        @if (day.enabled) {
+                                            <div class="flex flex-1 items-center gap-2">
+                                                <input type="time" [(ngModel)]="day.startTime"
+                                                    class="rounded-lg border border-(--border-default) bg-(--bg-surface) px-3 py-1.5 text-sm text-(--text-primary)" />
+                                                <span class="text-(--text-muted)">to</span>
+                                                <input type="time" [(ngModel)]="day.endTime"
+                                                    class="rounded-lg border border-(--border-default) bg-(--bg-surface) px-3 py-1.5 text-sm text-(--text-primary)" />
+                                            </div>
+                                        } @else {
+                                            <span class="text-sm text-(--text-muted)">Closed</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Holidays -->
+                        <div>
+                            <div class="mb-3 flex items-center justify-between">
+                                <label class="text-sm font-medium text-(--text-secondary)">Holidays</label>
+                            </div>
+                            <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-4">
+                                <!-- Add Holiday -->
+                                <div class="mb-4 flex items-end gap-3">
+                                    <div class="flex-1">
+                                        <label class="mb-1 block text-xs text-(--text-muted)">Holiday Name</label>
+                                        <input pInputText [(ngModel)]="newHolidayName" placeholder="e.g., Christmas" class="w-full" />
+                                    </div>
+                                    <div class="w-40">
+                                        <label class="mb-1 block text-xs text-(--text-muted)">Date</label>
+                                        <input type="date" [(ngModel)]="newHolidayDate"
+                                            class="w-full rounded-lg border border-(--border-default) bg-(--bg-surface) px-3 py-2 text-sm text-(--text-primary)" />
+                                    </div>
+                                    <p-button icon="pi pi-plus" [rounded]="true" [text]="true" (onClick)="addHoliday()"
+                                        [disabled]="!newHolidayName.trim() || !newHolidayDate" />
+                                </div>
+
+                                <!-- Holiday List -->
+                                @if (holidays.length === 0) {
+                                    <p class="text-center text-sm text-(--text-muted)">No holidays configured</p>
+                                } @else {
+                                    <div class="space-y-2">
+                                        @for (holiday of holidays; track holiday.date; let i = $index) {
+                                            <div class="flex items-center justify-between rounded-lg bg-(--bg-muted) px-3 py-2">
+                                                <div class="flex items-center gap-3">
+                                                    <i class="pi pi-calendar text-(--text-muted)"></i>
+                                                    <span class="font-medium text-(--text-primary)">{{ holiday.name }}</span>
+                                                    <span class="text-sm text-(--text-secondary)">{{ holiday.date }}</span>
+                                                </div>
+                                                <button (click)="removeHoliday(i)"
+                                                    class="rounded p-1 text-(--text-muted) transition-colors hover:bg-(--hover-bg) hover:text-red-500">
+                                                    <i class="pi pi-times text-xs"></i>
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    } @else {
+                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-900/20">
+                            <div class="flex items-center gap-3">
+                                <i class="pi pi-info-circle text-amber-600 dark:text-amber-400"></i>
+                                <p class="text-sm text-amber-700 dark:text-amber-300">
+                                    SLA timers will run 24/7 without business hours restrictions.
+                                </p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </p-tabpanel>
+
+            <!-- Conditions Tab -->
+            <p-tabpanel value="conditions">
+                <div class="space-y-5 py-4">
+                    <div class="rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+                        <div class="flex items-center gap-2 text-sm text-(--text-secondary)">
+                            <i class="pi pi-info-circle"></i>
+                            <span>Leave empty to apply to all. This policy applies when ANY condition matches.</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-(--text-secondary)">
+                            Channels
+                            <span class="font-normal text-(--text-muted)">(optional)</span>
+                        </label>
+                        <p-multiSelect [options]="channelOptions" [(ngModel)]="selectedChannels"
+                            optionLabel="label" optionValue="value" placeholder="All channels"
+                            [showClear]="true" class="w-full" />
+                    </div>
+
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-(--text-secondary)">
+                            Ticket Types
+                            <span class="font-normal text-(--text-muted)">(optional)</span>
+                        </label>
+                        <p-multiSelect [options]="ticketTypeOptions" [(ngModel)]="selectedTicketTypes"
+                            optionLabel="label" optionValue="value" placeholder="All ticket types"
+                            [showClear]="true" class="w-full" />
+                    </div>
+
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-(--text-secondary)">
+                            Customer Tiers
+                            <span class="font-normal text-(--text-muted)">(optional)</span>
+                        </label>
+                        <p-multiSelect [options]="customerTierOptions" [(ngModel)]="selectedCustomerTiers"
+                            optionLabel="label" optionValue="value" placeholder="All customer tiers"
+                            [showClear]="true" class="w-full" />
+                    </div>
+                </div>
+            </p-tabpanel>
+
+            <!-- Breach Actions Tab -->
+            <p-tabpanel value="actions">
+                <div class="space-y-5 py-4">
+                    <div class="rounded-xl border border-(--border-default) bg-(--bg-muted) p-4">
+                        <div class="flex items-center gap-2 text-sm text-(--text-secondary)">
+                            <i class="pi pi-info-circle"></i>
+                            <span>Configure what happens when SLA targets are about to be breached or violated.</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between rounded-xl border border-(--border-default) bg-(--bg-surface) p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                                <i class="pi pi-user text-blue-600 dark:text-blue-400"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-(--text-primary)">Notify Assigned Agent</p>
+                                <p class="text-sm text-(--text-secondary)">Send alert to the ticket's assigned agent</p>
+                            </div>
+                        </div>
+                        <p-toggleSwitch [(ngModel)]="notifyAgents" />
+                    </div>
+
+                    <div class="flex items-center justify-between rounded-xl border border-(--border-default) bg-(--bg-surface) p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                                <i class="pi pi-users text-purple-600 dark:text-purple-400"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-(--text-primary)">Notify Supervisors</p>
+                                <p class="text-sm text-(--text-secondary)">Send alert to team supervisors and managers</p>
+                            </div>
+                        </div>
+                        <p-toggleSwitch [(ngModel)]="notifySupervisors" />
+                    </div>
+
+                    <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                                    <i class="pi pi-arrow-up text-amber-600 dark:text-amber-400"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-(--text-primary)">Auto-Escalate</p>
+                                    <p class="text-sm text-(--text-secondary)">Automatically reassign ticket on SLA breach</p>
+                                </div>
+                            </div>
+                            <p-toggleSwitch [(ngModel)]="autoEscalate" />
+                        </div>
+                        
+                        @if (autoEscalate) {
+                            <div class="mt-4 border-t border-(--border-default) pt-4">
+                                <label class="mb-1.5 block text-sm font-medium text-(--text-secondary)">Escalate To</label>
+                                <p-select [options]="agentOptions" [(ngModel)]="escalateTo" optionLabel="label"
+                                    optionValue="value" placeholder="Select agent or supervisor" class="w-full" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            </p-tabpanel>
+        </p-tabpanels>
+    </p-tabs>
+
+    <ng-template pTemplate="footer">
+        <div class="flex items-center justify-between w-full">
+            <div class="text-xs text-(--text-muted)">
+                @if (!isValid) {
+                    <i class="pi pi-info-circle mr-1"></i>
+                    Fill in policy name and description
+                }
+            </div>
+            <div class="flex items-center gap-2">
+                <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="close()" />
+                <p-button [label]="isEditing ? 'Update Policy' : 'Create Policy'" icon="pi pi-check"
+                    (onClick)="onSave()" [disabled]="!isValid" />
+            </div>
+        </div>
+    </ng-template>
+</p-dialog>

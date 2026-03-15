@@ -1,0 +1,265 @@
+<p-dialog
+  header="Create New Ticket"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '700px' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  (onHide)="close()"
+  styleClass="create-ticket-dialog"
+>
+  <div class="flex flex-col gap-6">
+    <!-- Subject -->
+    <div class="flex flex-col gap-2">
+      <label for="subject" class="font-medium text-(--text-primary)"
+        >Subject <span class="text-red-500">*</span></label
+      >
+      <input
+        pInputText
+        id="subject"
+        [(ngModel)]="subject"
+        placeholder="Brief summary of the issue"
+        class="w-full"
+        [ngClass]="{ 'ng-invalid ng-dirty': submitted && !subject.trim() }"
+      />
+      @if (submitted && !subject.trim()) {
+        <small class="text-red-500">Subject is required</small>
+      }
+    </div>
+
+    <!-- Description -->
+    <div class="flex flex-col gap-2">
+      <label for="description" class="font-medium text-(--text-primary)"
+        >Description <span class="text-red-500">*</span></label
+      >
+      <div class="ticket-editor-wrapper">
+        <p-editor
+          [(ngModel)]="description"
+          [style]="{ height: '150px' }"
+          placeholder="Detailed description of the issue..."
+        ></p-editor>
+      </div>
+      @if (submitted && !description.trim()) {
+        <small class="text-red-500">Description is required</small>
+      }
+    </div>
+
+    <!-- Customer & Source Row -->
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Customer -->
+      <div class="flex flex-col gap-2">
+        <label class="font-medium text-(--text-primary)"
+          >Customer <span class="text-red-500">*</span></label
+        >
+        <p-select
+          [(ngModel)]="selectedCustomer"
+          [options]="customers"
+          optionLabel="name"
+          placeholder="Select customer"
+          [filter]="true"
+          filterBy="name,email"
+          [showClear]="true"
+          styleClass="w-full"
+          [ngClass]="{ 'ng-invalid ng-dirty': submitted && !selectedCustomer }"
+          appendTo="body"
+        >
+          <ng-template #selectedItem let-item>
+            <div class="flex items-center gap-2">
+              <p-avatar
+                [label]="item.name.charAt(0)"
+                shape="circle"
+                
+                styleClass="bg-primary text-white"
+              ></p-avatar>
+              <span>{{ item.name }}</span>
+            </div>
+          </ng-template>
+          <ng-template #item let-item>
+            <div class="flex items-center gap-2">
+              <p-avatar
+                [label]="item.name.charAt(0)"
+                shape="circle"
+                
+                styleClass="bg-primary text-white"
+              ></p-avatar>
+              <div class="flex flex-col">
+                <span class="font-medium">{{ item.name }}</span>
+                <small class="text-(--text-secondary)">{{ item.email }}</small>
+              </div>
+            </div>
+          </ng-template>
+        </p-select>
+        @if (submitted && !selectedCustomer) {
+          <small class="text-red-500">Customer is required</small>
+        }
+      </div>
+
+      <!-- Source -->
+      <div class="flex flex-col gap-2">
+        <label class="font-medium text-(--text-primary)">Source</label>
+        <p-select
+          [(ngModel)]="channel"
+          [options]="channelOptions"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        >
+          <ng-template #selectedItem let-item>
+            <div class="flex items-center gap-2">
+              <i [class]="item.icon"></i>
+              <span>{{ item.label }}</span>
+            </div>
+          </ng-template>
+          <ng-template #item let-item>
+            <div class="flex items-center gap-2">
+              <i [class]="item.icon"></i>
+              <span>{{ item.label }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+    </div>
+
+    <!-- Type & Priority Row -->
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Type -->
+      <div class="flex flex-col gap-2">
+        <label class="font-medium text-(--text-primary)">Type</label>
+        <p-select
+          [(ngModel)]="type"
+          [options]="typeOptions"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        >
+          <ng-template #selectedItem let-item>
+            <div class="flex items-center gap-2">
+              <i [class]="item.icon + ' ' + item.color"></i>
+              <span>{{ item.label }}</span>
+            </div>
+          </ng-template>
+          <ng-template #item let-item>
+            <div class="flex items-center gap-2">
+              <i [class]="item.icon + ' ' + item.color"></i>
+              <span>{{ item.label }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <!-- Priority -->
+      <div class="flex flex-col gap-2">
+        <label class="font-medium text-(--text-primary)">Priority</label>
+        <p-select
+          [(ngModel)]="priority"
+          [options]="priorityOptions"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        >
+          <ng-template #selectedItem let-item>
+            <div class="flex items-center gap-2">
+              <i [class]="item.icon + ' ' + item.color"></i>
+              <span>{{ item.label }}</span>
+            </div>
+          </ng-template>
+          <ng-template #item let-item>
+            <div class="flex items-center gap-2">
+              <i [class]="item.icon + ' ' + item.color"></i>
+              <span>{{ item.label }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+    </div>
+
+    <!-- Assigned Agent & Followers Row -->
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Assigned Agent -->
+      <div class="flex flex-col gap-2">
+        <label class="font-medium text-(--text-primary)">Assigned Agent</label>
+        <p-select
+          [(ngModel)]="assignedAgent"
+          [options]="agents"
+          optionLabel="name"
+          placeholder="Select agent (optional)"
+          [filter]="true"
+          filterBy="name,firstName,lastName,email"
+          [showClear]="true"
+          styleClass="w-full"
+          appendTo="body"
+        >
+          <ng-template #selectedItem let-item>
+            <div class="flex items-center gap-2">
+              <p-avatar
+                [label]="item.name.charAt(0)"
+                shape="circle"
+                
+                styleClass="bg-green-600 text-white"
+              ></p-avatar>
+              <span>{{ item.name }}</span>
+            </div>
+          </ng-template>
+          <ng-template #item let-item>
+            <div class="flex items-center gap-2">
+              <p-avatar
+                [label]="item.name.charAt(0)"
+                shape="circle"
+                
+                styleClass="bg-green-600 text-white"
+              ></p-avatar>
+              <div class="flex flex-col">
+                <span class="font-medium">{{ item.name }}</span>
+                <small class="text-(--text-secondary)">{{ item.role }}</small>
+              </div>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <!-- Followers -->
+      <div class="flex flex-col gap-2">
+        <label class="font-medium text-(--text-primary)">Followers</label>
+        <p-multiselect
+          [(ngModel)]="followers"
+          [options]="agents"
+          optionLabel="name"
+          placeholder="Select followers (optional)"
+          [filter]="true"
+          filterBy="name"
+          [maxSelectedLabels]="2"
+          selectedItemsLabel="{0} agents selected"
+          styleClass="w-full"
+          appendTo="body"
+        >
+          <ng-template #item let-item>
+            <div class="flex items-center gap-2">
+              <p-avatar
+                [label]="item.name.charAt(0)"
+                shape="circle"
+                
+                styleClass="bg-blue-600 text-white"
+              ></p-avatar>
+              <span>{{ item.name }}</span>
+            </div>
+          </ng-template>
+        </p-multiselect>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="close()" />
+      <p-button
+        label="Create Ticket"
+        icon="pi pi-check"
+        (onClick)="submit()"
+        [disabled]="!isValid && submitted"
+      />
+    </div>
+  </ng-template>
+</p-dialog>

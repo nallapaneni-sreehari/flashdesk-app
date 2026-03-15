@@ -1,0 +1,57 @@
+services:
+  # PostgreSQL
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: flashdesk
+      POSTGRES_PASSWORD: flashdesk_secret
+      POSTGRES_DB: flashdesk
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Redis (BullMQ)
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+  # Backend API
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://flashdesk:flashdesk_secret@postgres:5432/flashdesk
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 24h
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      INBOUND_EMAIL_ADDRESS: ${INBOUND_EMAIL_ADDRESS}
+
+  # Frontend (Angular + Nginx)
+  client:
+    build: ./client
+    restart: unless-stopped
+    ports:
+      - "2727:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  redisdata:

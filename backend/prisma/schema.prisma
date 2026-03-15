@@ -1,0 +1,582 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── ENUMS ─────────────────────────────────────────────
+
+enum UserRole {
+  admin
+  agent
+  customer
+}
+
+enum AgentStatus {
+  active
+  inactive
+  away
+  busy
+}
+
+enum TicketStatus {
+  open
+  in_progress
+  waiting
+  resolved
+  closed
+}
+
+enum TicketPriority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum TicketType {
+  incident
+  issue
+  request
+  question
+  task
+  bug
+  feature_request
+}
+
+enum TicketChannel {
+  email
+  chat
+  phone
+  portal
+}
+
+enum MessageAuthorType {
+  customer
+  agent
+  system
+}
+
+enum HistoryEntryType {
+  created
+  status_changed
+  priority_changed
+  assigned
+  reply
+  note
+  updated
+}
+
+enum ArticleStatus {
+  published
+  draft
+}
+
+enum NotificationType {
+  ticket
+  mention
+  system
+  assignment
+}
+
+enum DayOfWeek {
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+  saturday
+  sunday
+}
+
+// ─── WORKSPACE (multi-tenancy) ─────────────────────────
+
+model Workspace {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  logo         String?
+  supportEmail String?
+  ticketPrefix String   @default("TKT")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users             User[]
+  customers         Customer[]
+  companies         Company[]
+  tickets           Ticket[]
+  slaPolices        SLAPolicy[]
+  cannedCategories  CannedResponseCategory[]
+  cannedResponses   CannedResponse[]
+  kbCategories      KBCategory[]
+  kbArticles        KBArticle[]
+  tags              Tag[]
+
+  @@map("workspaces")
+}
+
+// ─── COMPANY (customer grouping) ──────────────────────
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  domain    String?
+  logo      String?
+  phone     String?
+  website   String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  customers Customer[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+  @@map("companies")
+}
+
+// ─── USER / AGENT ──────────────────────────────────────
+
+model User {
+  id             String      @id @default(cuid())
+  email          String      @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  avatar         String?
+  role           UserRole    @default(agent)
+  status         AgentStatus @default(active)
+  phone          String?
+  bio            String?
+  jobTitle       String?
+  department     String?
+  timezone       String      @default("UTC")
+  lastActiveAt   DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  // Ticket relations
+  assignedTickets   Ticket[]        @relation("AssignedAgent")
+  followedTickets   TicketFollower[]
+  messages          Message[]
+  historyEntries    HistoryEntry[]
+  cannedResponses   CannedResponse[]
+  kbArticles        KBArticle[]
+  notifications     Notification[]
+  sessions          Session[]
+
+  // SLA escalation target
+  escalationPolicies SLAPolicy[] @relation("EscalateTo")
+
+  @@map("users")
+}
+
+// ─── CUSTOMER ──────────────────────────────────────────
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  avatar    String?
+  phone     String?
+  tier      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastContactAt DateTime?
+
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  tickets  Ticket[]
+  messages Message[]
+
+  @@unique([workspaceId, email])
+  @@index([companyId])
+  @@map("customers")
+}
+
+// ─── TICKET ────────────────────────────────────────────
+
+model Ticket {
+  id               String         @id @default(cuid())
+  ticketNumber     Int            @unique @default(autoincrement())
+  subject          String
+  description      String
+  type             TicketType     @default(question)
+  status           TicketStatus   @default(open)
+  priority         TicketPriority @default(medium)
+  channel          TicketChannel  @default(portal)
+  eta              Int?           // estimated hours
+  firstResponseDue DateTime?
+  resolutionDue    DateTime?
+  firstResponseAt  DateTime?
+  resolvedAt       DateTime?
+  closedAt         DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  assignedAgentId String?
+  assignedAgent   User?   @relation("AssignedAgent", fields: [assignedAgentId], references: [id], onDelete: SetNull)
+
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  slaPolicyId String?
+  slaPolicy   SLAPolicy? @relation(fields: [slaPolicyId], references: [id], onDelete: SetNull)
+
+  followers TicketFollower[]
+  messages  Message[]
+  history   HistoryEntry[]
+  tags      TicketTag[]
+
+  @@index([status])
+  @@index([assignedAgentId])
+  @@index([customerId])
+  @@index([workspaceId])
+  @@map("tickets")
+}
+
+model TicketFollower {
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([ticketId, userId])
+  @@map("ticket_followers")
+}
+
+// ─── TAGS ──────────────────────────────────────────────
+
+model Tag {
+  id   String @id @default(cuid())
+  name String
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  tickets TicketTag[]
+
+  @@unique([workspaceId, name])
+  @@map("tags")
+}
+
+model TicketTag {
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  tagId String
+  tag   Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([ticketId, tagId])
+  @@map("ticket_tags")
+}
+
+// ─── MESSAGE ───────────────────────────────────────────
+
+model Message {
+  id             String            @id @default(cuid())
+  content        String
+  contentHtml    String?
+  isInternal     Boolean           @default(false)
+  authorType     MessageAuthorType
+  createdAt      DateTime          @default(now())
+  emailMessageId String?
+
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  // One of these will be set based on authorType
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  attachments MessageAttachment[]
+
+  @@index([ticketId])
+  @@index([emailMessageId])
+  @@map("messages")
+}
+
+model MessageAttachment {
+  id       String @id @default(cuid())
+  fileName String
+  fileSize Int
+  mimeType String
+  url      String
+
+  messageId String
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("message_attachments")
+}
+
+// ─── HISTORY / ACTIVITY LOG ────────────────────────────
+
+model HistoryEntry {
+  id          String           @id @default(cuid())
+  type        HistoryEntryType
+  description String
+  fromValue   String?
+  toValue     String?
+  timestamp   DateTime         @default(now())
+
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId])
+  @@map("history_entries")
+}
+
+// ─── SLA POLICIES ──────────────────────────────────────
+
+model SLAPolicy {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  isDefault   Boolean @default(false)
+  isActive    Boolean @default(true)
+
+  // Breach actions
+  notifyAgents      Boolean @default(true)
+  notifySupervisors Boolean @default(false)
+  autoEscalate      Boolean @default(false)
+
+  escalateToId String?
+  escalateTo   User?  @relation("EscalateTo", fields: [escalateToId], references: [id], onDelete: SetNull)
+
+  // Applies-to filters (stored as JSON for flexibility)
+  channels      TicketChannel[]
+  ticketTypes   TicketType[]
+  customerTiers String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  targets       SLATarget[]
+  businessHours BusinessHoursConfig?
+  holidays      SLAHoliday[]
+  tickets       Ticket[]
+
+  @@map("sla_policies")
+}
+
+model SLATarget {
+  id                String         @id @default(cuid())
+  priority          TicketPriority
+  firstResponseTime Int            // minutes
+  resolutionTime    Int            // minutes
+  escalateAfter     Int?           // minutes before breach
+
+  slaPolicyId String
+  slaPolicy   SLAPolicy @relation(fields: [slaPolicyId], references: [id], onDelete: Cascade)
+
+  @@unique([slaPolicyId, priority])
+  @@map("sla_targets")
+}
+
+model BusinessHoursConfig {
+  id       String  @id @default(cuid())
+  enabled  Boolean @default(true)
+  timezone String  @default("UTC")
+
+  slaPolicyId String    @unique
+  slaPolicy   SLAPolicy @relation(fields: [slaPolicyId], references: [id], onDelete: Cascade)
+
+  schedules BusinessHoursSchedule[]
+
+  @@map("business_hours_configs")
+}
+
+model BusinessHoursSchedule {
+  id        String  @id @default(cuid())
+  day       DayOfWeek
+  enabled   Boolean @default(true)
+  startTime String  // HH:MM
+  endTime   String  // HH:MM
+
+  businessHoursId String
+  businessHours   BusinessHoursConfig @relation(fields: [businessHoursId], references: [id], onDelete: Cascade)
+
+  @@unique([businessHoursId, day])
+  @@map("business_hours_schedules")
+}
+
+model SLAHoliday {
+  id   String   @id @default(cuid())
+  name String
+  date DateTime @db.Date
+
+  slaPolicyId String
+  slaPolicy   SLAPolicy @relation(fields: [slaPolicyId], references: [id], onDelete: Cascade)
+
+  @@map("sla_holidays")
+}
+
+// ─── CANNED RESPONSES ──────────────────────────────────
+
+model CannedResponseCategory {
+  id    String @id @default(cuid())
+  name  String
+  color String @default("#6366f1")
+  icon  String @default("pi pi-folder")
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  responses CannedResponse[]
+
+  @@unique([workspaceId, name])
+  @@map("canned_response_categories")
+}
+
+model CannedResponse {
+  id       String  @id @default(cuid())
+  title    String
+  shortcut String  // e.g. /hello
+  content  String  // HTML content
+  isShared Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categoryId String
+  category   CannedResponseCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User @relation(fields: [createdById], references: [id])
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, shortcut])
+  @@map("canned_responses")
+}
+
+// ─── KNOWLEDGE BASE ────────────────────────────────────
+
+model KBCategory {
+  id           String @id @default(cuid())
+  name         String
+  slug         String
+  description  String
+  icon         String @default("pi pi-folder")
+  color        String @default("#6366f1")
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  articles KBArticle[]
+
+  @@unique([workspaceId, slug])
+  @@map("kb_categories")
+}
+
+model KBArticle {
+  id         String        @id @default(cuid())
+  title      String
+  slug       String
+  excerpt    String
+  content    String
+  status     ArticleStatus @default(draft)
+  views      Int           @default(0)
+  helpful    Int           @default(0)
+  notHelpful Int           @default(0)
+  tags       String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categoryId String
+  category   KBCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User @relation(fields: [authorId], references: [id])
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId, status])
+  @@map("kb_articles")
+}
+
+// ─── NOTIFICATIONS ─────────────────────────────────────
+
+model Notification {
+  id      String           @id @default(cuid())
+  type    NotificationType
+  title   String
+  message String
+  read    Boolean          @default(false)
+  link    String?
+  time    DateTime         @default(now())
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@map("notifications")
+}
+
+// ─── USER SESSIONS ─────────────────────────────────────
+
+model Session {
+  id         String   @id @default(cuid())
+  device     String
+  browser    String
+  location   String?
+  ipAddress  String?
+  lastActive DateTime @default(now())
+  isCurrent  Boolean  @default(false)
+  expiresAt  DateTime
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+// ─── NOTIFICATION PREFERENCES ──────────────────────────
+
+model NotificationPreference {
+  id          String  @id @default(cuid())
+  category    String  // new_ticket, ticket_reply, sla_warning, etc.
+  email       Boolean @default(true)
+  push        Boolean @default(true)
+  inApp       Boolean @default(true)
+
+  userId String
+  
+  @@unique([userId, category])
+  @@map("notification_preferences")
+}

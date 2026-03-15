@@ -1,0 +1,72 @@
+<p-dialog
+  [(visible)]="confirmService.visible"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '400px', 'background-color': 'var(--bg-surface)' }"
+  [showHeader]="false"
+  contentStyleClass="!px-0 !bg-[var(--bg-surface)] !pb-1 w-[500px]"
+  styleClass="!bg-[var(--bg-surface)] !border !border-[var(--border-default)] !rounded-xl"
+>
+  <div class="flex flex-col items-center p-4 text-center bg-(--bg-surface)">
+    <!-- Icon -->
+    <div
+      class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-(--bg-elevated)"
+    >
+      <i [class]="confirmService.config().icon + ' text-3xl ' + confirmService.config().iconColor"></i>
+    </div>
+
+    <!-- Title -->
+    <h3 class="mb-2 text-lg font-semibold text-(--text-primary)">
+      {{ confirmService.config().title }}
+    </h3>
+
+    <!-- Message -->
+    @if (confirmService.config().message) {
+    <p class="mb-4 text-sm text-(--text-secondary)">
+      {{ confirmService.config().message }}
+    </p>
+    }
+
+    <!-- Changes List -->
+    @if (confirmService.config().changes?.length) {
+    <div class="w-full mb-6 rounded-lg border border-(--border-default) bg-(--bg-base) overflow-hidden text-left">
+      <div class="px-3 py-2 bg-(--bg-elevated) border-b border-(--border-default)">
+        <span class="text-xs font-medium text-(--text-muted) uppercase tracking-wide">Changes to apply</span>
+      </div>
+      <div class="divide-y divide-(--border-default)">
+        @for (change of confirmService.config().changes; track change.field) {
+        <div class="px-3 py-2.5 flex items-center justify-between gap-3">
+          <span class="text-sm font-medium text-(--text-primary)">{{ change.field }}</span>
+          <div class="flex items-center gap-2 text-xs">
+            @if (change.from) {
+            <span class="rounded bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 text-red-600 dark:text-red-400 line-through">{{ change.from }}</span>
+            <i class="pi pi-arrow-right text-[10px] text-(--text-muted)"></i>
+            }
+            <span class="rounded bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 text-green-600 dark:text-green-400">{{ change.to }}</span>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- Actions -->
+    <div class="flex w-full gap-3 justify-end items-center">
+      <p-button
+        [label]="confirmService.config().cancelLabel"
+        [outlined]="true"
+        severity="secondary"
+        styleClass="flex-1"
+        (onClick)="confirmService.reject()"
+      />
+      <p-button
+        [label]="confirmService.config().confirmLabel"
+        [severity]="confirmService.config().confirmSeverity"
+        styleClass="flex-1"
+        (onClick)="confirmService.accept()"
+      />
+    </div>
+  </div>
+</p-dialog>

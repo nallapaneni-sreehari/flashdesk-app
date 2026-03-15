@@ -1,0 +1,196 @@
+<header
+  class="flex h-16 items-center justify-between border-b border-[var(--border-default)] bg-[var(--bg-surface)] px-4 shadow-sm"
+>
+  <!-- Left Section -->
+  <div class="flex items-center gap-4">
+    <p-button
+      icon="pi pi-bars"
+      [text]="true"
+      [rounded]="true"
+      severity="secondary"
+      (onClick)="onToggleSidebar()"
+    />
+
+    <!-- Search Trigger -->
+    <button
+      (click)="openSearch()"
+      class="hidden items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-muted)] px-3 py-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:border-[var(--text-muted)] hover:bg-[var(--hover-bg)] md:flex w-42"
+    >
+      <i class="pi pi-search text-[var(--text-muted)]"></i>
+      <span>Search...</span>
+      <kbd
+        class="ml-4 rounded bg-[var(--kbd-bg)] px-1.5 py-0.5 text-xs font-medium text-[var(--text-secondary)]"
+      >
+        ⌘K
+      </kbd>
+    </button>
+  </div>
+
+  <!-- Right Section -->
+  <div class="flex items-center gap-1">
+    <!-- Dark Mode Toggle -->
+    <p-button
+      [icon]="themeService.isDarkMode() ? 'pi pi-sun' : 'pi pi-moon'"
+      [text]="true"
+      [rounded]="true"
+      severity="secondary"
+      (onClick)="toggleDarkMode()"
+      [pTooltip]="themeService.isDarkMode() ? 'Light Mode' : 'Dark Mode'"
+      tooltipPosition="bottom"
+    />
+
+    <!-- Theme Configurator -->
+    <app-theme-configurator />
+
+    <!-- Notifications -->
+    <div class="relative">
+      <p-button
+        icon="pi pi-bell"
+        [text]="true"
+        [rounded]="true"
+        severity="secondary"
+        (onClick)="notificationsPanel.toggle($event)"
+      />
+      @if (unreadCount > 0) {
+        <span
+          class="absolute -right-[-3px] -top-[-5px] flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-semibold text-white"
+        >
+          {{ unreadCount }}
+        </span>
+      }
+    </div>
+
+    <!-- Notifications Popover -->
+    <p-popover #notificationsPanel [style]="{ width: '380px' }" (onShow)="onPanelShow()">
+      <div class="flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-(--border-default) px-4 py-3">
+          <h3 class="text-base font-semibold text-(--text-primary)">Notifications</h3>
+          @if (unreadCount > 0) {
+            <button
+              (click)="markAllAsRead()"
+              class="text-xs font-medium hover:underline"
+              style="color: var(--color-primary)"
+            >
+              Mark all as read
+            </button>
+          }
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-(--border-default)">
+          @for (tab of tabs; track tab) {
+            <button
+              (click)="selectedTab.set(tab)"
+              class="flex-1 py-2.5 text-sm font-medium capitalize transition-colors"
+              [class.text-(--text-primary)]="selectedTab() === tab"
+              [class.text-(--text-secondary)]="selectedTab() !== tab"
+              [style.border-bottom]="selectedTab() === tab ? '2px solid var(--color-primary)' : '2px solid transparent'"
+            >
+              {{ tab }}
+              @if (tab === 'latest' && unreadCount > 0) {
+                <span class="ml-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] text-white">
+                  {{ unreadCount }}
+                </span>
+              }
+            </button>
+          }
+        </div>
+
+        <!-- Notification List -->
+        <div class="max-h-80 overflow-y-auto">
+          @for (notification of filteredNotifications(); track notification.id) {
+            <div
+              class="flex gap-3 px-4 py-3 transition-colors cursor-pointer hover:bg-(--hover-bg)"
+              [class.bg-(--bg-muted)]="!notification.read"
+              (click)="onNotificationClick(notification)"
+            >
+              <!-- Icon -->
+              <div class="shrink-0">
+                <div
+                  class="flex h-10 w-10 items-center justify-center rounded-full"
+                  [ngClass]="getNotificationColor(notification.type)"
+                >
+                  <i [class]="getNotificationIcon(notification.type)"></i>
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div class="min-w-0 flex-1">
+                <div class="flex items-start justify-between gap-2">
+                  <p
+                    class="text-sm font-medium truncate"
+                    [class.text-(--text-primary)]="!notification.read"
+                    [class.text-(--text-secondary)]="notification.read"
+                  >
+                    {{ notification.title }}
+                  </p>
+                  @if (!notification.read) {
+                    <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full" style="background: var(--color-primary)"></span>
+                  }
+                </div>
+                <p class="mt-0.5 text-xs text-(--text-secondary) line-clamp-2">
+                  {{ notification.message }}
+                </p>
+                <p class="mt-1 text-xs text-(--text-muted)">
+                  {{ formatTime(notification.time) }}
+                </p>
+              </div>
+            </div>
+          } @empty {
+            <div class="flex flex-col items-center justify-center py-8">
+              <i class="pi pi-bell-slash text-3xl text-(--text-muted)"></i>
+              <p class="mt-2 text-sm text-(--text-secondary)">
+                @switch (selectedTab()) {
+                  @case ('latest') { No unread notifications }
+                  @case ('read') { No read notifications }
+                  @default { No notifications }
+                }
+              </p>
+            </div>
+          }
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-(--border-default) px-4 py-2">
+          <button
+            class="w-full rounded-lg py-2 text-center text-sm font-medium transition-colors hover:bg-(--hover-bg)"
+            style="color: var(--color-primary)"
+          >
+            View all notifications
+          </button>
+        </div>
+      </div>
+    </p-popover>
+
+    <!-- Divider -->
+    <div class="mx-2 h-6 w-px bg-[var(--border-default)]"></div>
+
+    <!-- User Menu -->
+    <div
+      class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--hover-bg)]"
+      (click)="userMenu.toggle($event)"
+    >
+      @if (currentUser()?.avatar) {
+        <p-avatar
+          [image]="currentUser()!.avatar"
+          shape="circle"
+          size="normal"
+        />
+      } @else {
+        <p-avatar
+          [label]="currentUser()?.name?.charAt(0) ?? 'U'"
+          shape="circle"
+          size="normal"
+          styleClass="bg-primary text-white"
+        />
+      }
+      <div class="hidden flex-col md:flex">
+        <span class="text-sm font-medium text-[var(--text-primary)]">{{ currentUser()?.name ?? 'User' }}</span>
+        <span class="text-xs text-[var(--text-secondary)] capitalize">{{ currentUser()?.role ?? 'Guest' }}</span>
+      </div>
+      <i class="pi pi-chevron-down text-xs text-[var(--text-muted)]"></i>
+    </div>
+    <p-menu #userMenu [model]="userMenuItems" [popup]="true" />
+  </div>
+</header>

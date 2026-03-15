@@ -1,0 +1,1128 @@
+/* Tailwind CSS */
+@import 'tailwindcss';
+
+/* Dark mode selector for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* PrimeIcons */
+@import 'primeicons/primeicons.css';
+
+/* Theme CSS Custom Properties */
+:root {
+  /* Brand colors (set by ThemeService) */
+  --color-primary: #4f46e5;
+  --color-secondary: #3b82f6;
+  --color-tertiary: #c7d2fe;
+  --color-primary-rgb: 79, 70, 229;
+  --color-secondary-rgb: 59, 130, 246;
+  --color-tertiary-rgb: 199, 210, 254;
+
+  /* Semantic colors - Light Mode */
+  --bg-base: #f9fafb;           /* gray-50 */
+  --bg-surface: #ffffff;        /* white */
+  --bg-elevated: #f3f4f6;       /* gray-100 */
+  --bg-muted: #f9fafb;          /* gray-50 */
+
+  --text-primary: #111827;      /* gray-900 */
+  --text-secondary: #6b7280;    /* gray-500 */
+  --text-muted: #9ca3af;        /* gray-400 */
+  --text-inverted: #ffffff;     /* white */
+
+  --border-default: #e5e7eb;    /* gray-200 */
+  --border-muted: #f3f4f6;      /* gray-100 */
+
+  --hover-bg: #f3f4f6;          /* gray-100 */
+  --kbd-bg: #e5e7eb;            /* gray-200 */
+}
+
+.dark {
+  /* Semantic colors - Dark Mode */
+  --bg-base: #111827;           /* gray-900 */
+  --bg-surface: #1f2937;        /* gray-800 */
+  --bg-elevated: #374151;       /* gray-700 */
+  --bg-muted: #1f2937;          /* gray-800 */
+
+  --text-primary: #f3f4f6;      /* gray-100 */
+  --text-secondary: #9ca3af;    /* gray-400 */
+  --text-muted: #6b7280;        /* gray-500 */
+  --text-inverted: #111827;     /* gray-900 */
+
+  --border-default: #374151;    /* gray-700 */
+  --border-muted: #374151;      /* gray-700 */
+
+  --hover-bg: #374151;          /* gray-700 */
+  --kbd-bg: #374151;            /* gray-700 */
+  
+  /* Form field shadows for dark mode */
+  --input-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+  --input-focus-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.25), inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+:root {
+  /* Form field shadows for light mode */
+  --input-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  --input-focus-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Global Styles */
+html,
+body {
+  font-family: 'Urbanist', sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  @apply antialiased;
+}
+
+/* Sidebar Navigation Active State */
+.nav-item.active-nav-item {
+  background-color: var(--color-tertiary);
+  color: var(--color-primary);
+}
+
+.dark .nav-item.active-nav-item {
+  background-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  color: var(--color-tertiary);
+}
+
+/* Ensure PrimeNG tooltips appear above all content */
+.p-tooltip {
+  z-index: 10000 !important;
+}
+
+/* PrimeNG Editor (Quill) - Theme Integration */
+.ticket-editor-wrapper {
+  background-color: var(--bg-surface);
+}
+
+.ticket-editor-wrapper .p-editor {
+  border: none;
+  background-color: var(--bg-surface) !important;
+}
+
+.ticket-editor-wrapper .p-editor-container {
+  background-color: var(--bg-surface) !important;
+}
+
+.ticket-editor-wrapper .p-editor .ql-toolbar {
+  background-color: var(--bg-elevated);
+  border: none;
+  border-bottom: 1px solid var(--border-default);
+  padding: 0.75rem 1rem;
+}
+
+.ticket-editor-wrapper .p-editor .ql-toolbar .ql-stroke {
+  stroke: var(--text-secondary);
+}
+
+.ticket-editor-wrapper .p-editor .ql-toolbar .ql-fill {
+  fill: var(--text-secondary);
+}
+
+.ticket-editor-wrapper .p-editor .ql-toolbar .ql-picker {
+  color: var(--text-secondary);
+}
+
+.ticket-editor-wrapper .p-editor .ql-toolbar button:hover .ql-stroke,
+.ticket-editor-wrapper .p-editor .ql-toolbar button.ql-active .ql-stroke {
+  stroke: var(--color-primary);
+}
+
+.ticket-editor-wrapper .p-editor .ql-toolbar button:hover .ql-fill,
+.ticket-editor-wrapper .p-editor .ql-toolbar button.ql-active .ql-fill {
+  fill: var(--color-primary);
+}
+
+.ticket-editor-wrapper .p-editor .ql-toolbar .ql-picker-label:hover,
+.ticket-editor-wrapper .p-editor .ql-toolbar .ql-picker-label.ql-active {
+  color: var(--color-primary);
+}
+
+.ticket-editor-wrapper .p-editor .ql-container {
+  background-color: var(--bg-surface) !important;
+  border: none;
+  font-family: 'Urbanist', sans-serif;
+  font-size: 0.9375rem;
+}
+
+.ticket-editor-wrapper .p-editor .ql-editor {
+  color: var(--text-primary);
+  padding: 1.25rem;
+  line-height: 1.7;
+  background-color: var(--bg-surface) !important;
+}
+
+.ticket-editor-wrapper .p-editor .ql-editor.ql-blank::before {
+  color: var(--text-muted);
+  font-style: normal;
+}
+
+.ticket-editor-wrapper .p-editor .ql-editor h1,
+.ticket-editor-wrapper .p-editor .ql-editor h2,
+.ticket-editor-wrapper .p-editor .ql-editor h3 {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.ticket-editor-wrapper .p-editor .ql-editor a {
+  color: var(--color-primary);
+}
+
+.ticket-editor-wrapper .p-editor .ql-editor blockquote {
+  border-left: 4px solid var(--color-primary);
+  padding-left: 1rem;
+  color: var(--text-secondary);
+}
+
+.ticket-editor-wrapper .p-editor .ql-editor code,
+.ticket-editor-wrapper .p-editor .ql-editor pre {
+  background-color: var(--bg-elevated);
+  border-radius: 0.375rem;
+  color: var(--text-primary);
+}
+
+/* Quill dropdown menus */
+.ql-toolbar .ql-picker-options {
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.ql-toolbar .ql-picker-item {
+  color: var(--text-primary) !important;
+}
+
+.ql-toolbar .ql-picker-item:hover {
+  background-color: var(--hover-bg) !important;
+  color: var(--color-primary) !important;
+}
+
+/* Prose styling for ticket description */
+.prose {
+  line-height: 1.75;
+}
+
+.prose p {
+  margin-bottom: 1rem;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose h1 { font-size: 1.5rem; }
+.prose h2 { font-size: 1.25rem; }
+.prose h3 { font-size: 1.125rem; }
+
+.prose ul, .prose ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.prose ul {
+  list-style-type: disc;
+}
+
+.prose ol {
+  list-style-type: decimal;
+}
+
+.prose li {
+  margin-bottom: 0.25rem;
+}
+
+.prose a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.prose a:hover {
+  opacity: 0.8;
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose blockquote {
+  border-left: 4px solid var(--color-primary);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* PrimeNG Table - Theme Integration */
+.p-datatable {
+  background-color: var(--bg-surface) !important;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background-color: var(--bg-muted) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-default) !important;
+}
+
+.p-datatable .p-datatable-tbody > tr {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  border-color: var(--border-default) !important;
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+.p-datatable .p-paginator {
+  background-color: var(--bg-surface) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-primary) !important;
+}
+
+.p-datatable .p-paginator .p-paginator-element {
+  color: var(--text-secondary) !important;
+}
+
+.p-datatable .p-paginator .p-paginator-element:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+/* PrimeNG Drawer - Theme Integration */
+.p-drawer {
+  background-color: var(--bg-surface) !important;
+}
+
+.p-drawer .p-drawer-content {
+  background-color: var(--bg-surface) !important;
+}
+
+.p-drawer .p-drawer-header {
+  background-color: var(--bg-surface) !important;
+  border-color: var(--border-default) !important;
+}
+
+/* Overlay mask for drawer */
+.p-drawer-mask {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+}
+
+.prose code {
+  background-color: var(--bg-elevated);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+  font-size: 0.875em;
+}
+
+.prose pre {
+  background-color: var(--bg-elevated);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.prose pre code {
+  background: none;
+  padding: 0;
+}
+
+/* Activity History Accordion */
+.history-accordion {
+  width: 100%;
+}
+
+.history-accordion .p-accordionpanel {
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-default);
+  background-color: var(--bg-surface);
+  overflow: hidden;
+}
+
+.history-accordion .p-accordionheader {
+  background-color: var(--bg-elevated);
+  border: none;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.history-accordion .p-accordionheader:hover {
+  background-color: var(--hover-bg);
+}
+
+.history-accordion .p-accordionheader-toggle-icon {
+  color: var(--text-muted);
+}
+
+.history-accordion .p-accordioncontent {
+  background-color: var(--bg-surface);
+}
+
+.history-accordion .p-accordioncontent-content {
+  padding: 1rem;
+  background-color: var(--bg-surface);
+}
+
+/* Confirm Dialog Styling */
+.p-dialog {
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 0.75rem !important;
+}
+
+.p-dialog-content {
+  background-color: var(--bg-surface) !important;
+}
+
+.p-dialog-mask {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Popover Styling (Notifications, etc.) */
+.p-popover {
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.p-popover-content {
+  background-color: var(--bg-surface) !important;
+  padding: 0 !important;
+}
+
+/* Menu Styling (Profile menu, context menus) */
+.p-menu {
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 0.5rem !important;
+  padding: 0.25rem !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.p-menu-item-content {
+  background-color: transparent !important;
+  border-radius: 0.375rem !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.p-menu-item-content:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+.p-menu-item-link {
+  color: var(--text-primary) !important;
+  padding: 0.625rem 0.75rem !important;
+}
+
+.p-menu-item-icon {
+  color: var(--text-secondary) !important;
+  margin-right: 0.5rem !important;
+}
+
+.p-menu-separator {
+  border-color: var(--border-default) !important;
+  margin: 0.25rem 0 !important;
+}
+
+/* Danger menu item (delete actions) */
+.menu-item-danger,
+.menu-item-danger *,
+.menu-item-danger .p-menu-item-content,
+.menu-item-danger .p-menu-item-link,
+.menu-item-danger .p-menu-item-label,
+.menu-item-danger .p-menu-item-icon,
+.menu-item-danger .p-menuitem-content,
+.menu-item-danger .p-menuitem-link,
+.menu-item-danger .p-menuitem-text,
+.menu-item-danger .p-menuitem-icon {
+  color: #dc2626 !important;
+}
+
+.menu-item-danger .p-menu-item-content:hover,
+.menu-item-danger .p-menuitem-content:hover {
+  background-color: #fef2f2 !important;
+}
+
+.dark .menu-item-danger .p-menu-item-content:hover,
+.dark .menu-item-danger .p-menuitem-content:hover {
+  background-color: rgba(220, 38, 38, 0.1) !important;
+}
+
+/* PrimeNG Select (Dropdown) - Theme Integration */
+.p-select {
+  background-color: var(--bg-base) !important;
+  border: 1px solid var(--border-default) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.15s ease !important;
+  box-shadow: var(--input-shadow) !important;
+}
+
+.p-select:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--border-default)) !important;
+  background-color: var(--bg-surface) !important;
+}
+
+.p-select.p-focus {
+  border-color: var(--color-primary) !important;
+  background-color: var(--bg-surface) !important;
+  box-shadow: var(--input-focus-shadow) !important;
+}
+
+.p-select-label {
+  color: var(--text-primary) !important;
+}
+
+.p-select-dropdown {
+  background-color: transparent !important;
+  color: var(--text-secondary) !important;
+}
+
+/* Dropdown Panel/Overlay */
+.p-select-overlay,
+.p-select-panel {
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.p-select-list-container {
+  background-color: var(--bg-surface) !important;
+}
+
+.p-select-list {
+  background-color: var(--bg-surface) !important;
+  padding: 0.25rem !important;
+}
+
+.p-select-option {
+  color: var(--text-primary) !important;
+  background-color: transparent !important;
+  border-radius: 0.375rem !important;
+  padding: 0.625rem 0.75rem !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.p-select-option:hover {
+  background-color: var(--hover-bg) !important;
+  color: var(--text-primary) !important;
+}
+
+.p-select-option.p-select-option-selected,
+.p-select-option.p-highlight {
+  background-color: rgba(var(--color-primary-rgb), 0.1) !important;
+  color: var(--color-primary) !important;
+}
+
+.p-select-option.p-select-option-selected:hover,
+.p-select-option.p-highlight:hover {
+  background-color: rgba(var(--color-primary-rgb), 0.15) !important;
+}
+
+/* Selected option checkmark */
+.p-select-option-selected .p-select-option-check-icon,
+.p-highlight .p-select-option-check-icon {
+  color: var(--color-primary) !important;
+}
+
+/* Filter input in dropdown */
+.p-select-filter-container {
+  background-color: var(--bg-surface) !important;
+  padding: 0.5rem !important;
+  border-bottom: 1px solid var(--border-default) !important;
+}
+
+.p-select-filter {
+  background-color: var(--bg-base) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-primary) !important;
+}
+
+.p-select-filter:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2) !important;
+}
+
+/* Empty message */
+.p-select-empty-message {
+  color: var(--text-muted) !important;
+  padding: 0.75rem !important;
+}
+
+/* PrimeNG MultiSelect - Theme Integration */
+.p-multiselect {
+  background-color: var(--bg-base) !important;
+  border: 1px solid var(--border-default) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.15s ease !important;
+  box-shadow: var(--input-shadow) !important;
+}
+
+.p-multiselect:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--border-default)) !important;
+  background-color: var(--bg-surface) !important;
+}
+
+.p-multiselect.p-focus {
+  border-color: var(--color-primary) !important;
+  background-color: var(--bg-surface) !important;
+  box-shadow: var(--input-focus-shadow) !important;
+}
+
+.p-multiselect-label {
+  color: var(--text-primary) !important;
+}
+
+.p-multiselect-label.p-placeholder {
+  color: var(--text-muted) !important;
+}
+
+.p-multiselect-dropdown {
+  background-color: transparent !important;
+  color: var(--text-secondary) !important;
+}
+
+/* MultiSelect Chips */
+.p-multiselect-chip {
+  background-color: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border-radius: 0.375rem !important;
+}
+
+.p-multiselect-chip-icon {
+  color: var(--text-secondary) !important;
+}
+
+.p-multiselect-chip-icon:hover {
+  color: var(--text-primary) !important;
+}
+
+/* MultiSelect Panel/Overlay */
+.p-multiselect-overlay,
+.p-multiselect-panel {
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.p-multiselect-header {
+  background-color: var(--bg-surface) !important;
+  border-bottom: 1px solid var(--border-default) !important;
+  padding: 0.5rem !important;
+}
+
+.p-multiselect-filter-container {
+  background-color: var(--bg-surface) !important;
+}
+
+.p-multiselect-filter {
+  background-color: var(--bg-base) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-primary) !important;
+}
+
+.p-multiselect-filter:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2) !important;
+}
+
+.p-multiselect-list-container {
+  background-color: var(--bg-surface) !important;
+}
+
+.p-multiselect-list {
+  background-color: var(--bg-surface) !important;
+  padding: 0.25rem !important;
+}
+
+.p-multiselect-option {
+  color: var(--text-primary) !important;
+  background-color: transparent !important;
+  border-radius: 0.375rem !important;
+  padding: 0.625rem 0.75rem !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.p-multiselect-option:hover {
+  background-color: var(--hover-bg) !important;
+  color: var(--text-primary) !important;
+}
+
+.p-multiselect-option.p-multiselect-option-selected,
+.p-multiselect-option.p-highlight {
+  background-color: rgba(var(--color-primary-rgb), 0.1) !important;
+  color: var(--color-primary) !important;
+}
+
+.p-multiselect-option.p-multiselect-option-selected:hover,
+.p-multiselect-option.p-highlight:hover {
+  background-color: rgba(var(--color-primary-rgb), 0.15) !important;
+}
+
+/* Checkbox in multiselect */
+.p-multiselect-option .p-checkbox {
+  margin-right: 0.5rem !important;
+}
+
+.p-multiselect-option .p-checkbox-box {
+  background-color: var(--bg-surface) !important;
+  border-color: var(--border-default) !important;
+}
+
+.p-multiselect-option.p-highlight .p-checkbox-box,
+.p-multiselect-option .p-checkbox-box.p-highlight {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.p-multiselect-option .p-checkbox-box .p-checkbox-icon {
+  color: white !important;
+}
+
+/* Select All checkbox in header */
+.p-multiselect-header .p-checkbox-box {
+  background-color: var(--bg-surface) !important;
+  border-color: var(--border-default) !important;
+}
+
+.p-multiselect-header .p-checkbox-box.p-highlight {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Close button in header */
+.p-multiselect-close {
+  color: var(--text-secondary) !important;
+}
+
+.p-multiselect-close:hover {
+  background-color: var(--hover-bg) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Empty message */
+.p-multiselect-empty-message {
+  color: var(--text-muted) !important;
+  padding: 0.75rem !important;
+}
+
+/* PrimeNG Checkbox - Theme Integration */
+.p-checkbox-box {
+  background-color: var(--bg-base) !important;
+  border: 1px solid var(--border-default) !important;
+  transition: all 0.15s ease !important;
+  box-shadow: var(--input-shadow) !important;
+}
+
+.p-checkbox-box:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--border-default)) !important;
+  background-color: var(--bg-surface) !important;
+}
+
+.p-checkbox-box.p-highlight,
+.p-checkbox.p-checkbox-checked .p-checkbox-box {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: none !important;
+}
+
+.p-checkbox-box .p-checkbox-icon {
+  color: white !important;
+}
+
+.p-checkbox:focus-visible .p-checkbox-box {
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2) !important;
+}
+
+/* PrimeNG Input Text - Theme Integration */
+.p-inputtext,
+input[pInputText],
+input.p-inputtext {
+  background-color: var(--bg-base) !important;
+  border: 1px solid var(--border-default) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.15s ease !important;
+  box-shadow: var(--input-shadow) !important;
+}
+
+.p-inputtext::placeholder,
+input[pInputText]::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.p-inputtext:hover,
+input[pInputText]:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--border-default)) !important;
+  background-color: var(--bg-surface) !important;
+}
+
+.p-inputtext:focus,
+input[pInputText]:focus,
+.p-inputtext.p-focus {
+  border-color: var(--color-primary) !important;
+  background-color: var(--bg-surface) !important;
+  box-shadow: var(--input-focus-shadow) !important;
+  outline: none !important;
+}
+
+.p-inputtext:disabled,
+input[pInputText]:disabled {
+  background-color: var(--bg-elevated) !important;
+  color: var(--text-muted) !important;
+  cursor: not-allowed !important;
+}
+
+/* PrimeNG Input Textarea - Theme Integration */
+.p-inputtextarea,
+textarea[pInputTextarea],
+textarea.p-inputtextarea {
+  background-color: var(--bg-base) !important;
+  border: 1px solid var(--border-default) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.15s ease !important;
+  box-shadow: var(--input-shadow) !important;
+}
+
+.p-inputtextarea::placeholder,
+textarea[pInputTextarea]::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.p-inputtextarea:hover,
+textarea[pInputTextarea]:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--border-default)) !important;
+  background-color: var(--bg-surface) !important;
+}
+
+.p-inputtextarea:focus,
+textarea[pInputTextarea]:focus,
+.p-inputtextarea.p-focus {
+  border-color: var(--color-primary) !important;
+  background-color: var(--bg-surface) !important;
+  box-shadow: var(--input-focus-shadow) !important;
+  outline: none !important;
+}
+
+/* PrimeNG InputGroup - Theme Integration */
+.p-inputgroup {
+  background-color: var(--bg-surface) !important;
+}
+
+.p-inputgroup-addon {
+  background-color: var(--bg-elevated) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* PrimeNG IconField - Theme Integration */
+.p-iconfield {
+  position: relative;
+}
+
+.p-inputicon {
+  color: var(--text-muted) !important;
+}
+
+/* PrimeNG DatePicker / Calendar - Theme Integration */
+.p-datepicker,
+.p-calendar {
+  background-color: var(--bg-base) !important;
+  border: 1px solid var(--border-default) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.15s ease !important;
+  box-shadow: var(--input-shadow) !important;
+}
+
+.p-datepicker:hover,
+.p-calendar:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--border-default)) !important;
+  background-color: var(--bg-surface) !important;
+}
+
+.p-datepicker.p-focus,
+.p-calendar.p-focus {
+  border-color: var(--color-primary) !important;
+  background-color: var(--bg-surface) !important;
+  box-shadow: var(--input-focus-shadow) !important;
+}
+
+/* DatePicker Panel */
+.p-datepicker-panel {
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.p-datepicker-header {
+  background-color: var(--bg-surface) !important;
+  border-bottom: 1px solid var(--border-default) !important;
+  color: var(--text-primary) !important;
+  padding: 0.5rem !important;
+}
+
+/* PrimeNG ConfirmPopup - Theme Integration */
+.p-confirmpopup,
+.themed-confirm-popup {
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.p-confirmpopup .p-confirmpopup-content,
+.themed-confirm-popup .p-confirmpopup-content {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  padding: 1rem !important;
+}
+
+.p-confirmpopup .p-confirmpopup-message,
+.themed-confirm-popup .p-confirmpopup-message {
+  color: var(--text-primary) !important;
+}
+
+.p-confirmpopup .p-confirmpopup-icon,
+.themed-confirm-popup .p-confirmpopup-icon {
+  color: var(--text-secondary) !important;
+}
+
+.p-confirmpopup .p-confirmpopup-footer,
+.themed-confirm-popup .p-confirmpopup-footer {
+  background-color: var(--bg-surface) !important;
+  border-top: 1px solid var(--border-default) !important;
+  padding: 0.75rem 1rem !important;
+}
+
+/* ConfirmPopup arrow/pointer */
+.p-confirmpopup::before,
+.p-confirmpopup::after,
+.themed-confirm-popup::before,
+.themed-confirm-popup::after {
+  border-color: transparent transparent var(--bg-surface) transparent !important;
+}
+
+/* Testimonials Marquee Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-paused {
+  animation-play-state: paused !important;
+}
+
+.p-confirmpopup.p-confirmpopup-flipped::before,
+.p-confirmpopup.p-confirmpopup-flipped::after,
+.themed-confirm-popup.p-confirmpopup-flipped::before,
+.themed-confirm-popup.p-confirmpopup-flipped::after {
+  border-color: var(--bg-surface) transparent transparent transparent !important;
+}
+
+.p-datepicker-title {
+  color: var(--text-primary) !important;
+}
+
+.p-datepicker-title button {
+  color: var(--text-primary) !important;
+}
+
+.p-datepicker-title button:hover {
+  color: var(--color-primary) !important;
+}
+
+.p-datepicker-prev,
+.p-datepicker-next {
+  color: var(--text-secondary) !important;
+}
+
+.p-datepicker-prev:hover,
+.p-datepicker-next:hover {
+  background-color: var(--hover-bg) !important;
+  color: var(--text-primary) !important;
+}
+
+.p-datepicker-calendar {
+  background-color: var(--bg-surface) !important;
+}
+
+.p-datepicker-calendar th {
+  color: var(--text-secondary) !important;
+  font-weight: 500 !important;
+}
+
+.p-datepicker-calendar td {
+  padding: 0.25rem !important;
+}
+
+.p-datepicker-calendar td span {
+  color: var(--text-primary) !important;
+  border-radius: 0.375rem !important;
+  transition: all 0.15s ease !important;
+}
+
+.p-datepicker-calendar td span:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+.p-datepicker-calendar td.p-datepicker-today span {
+  background-color: var(--bg-elevated) !important;
+  font-weight: 600 !important;
+}
+
+.p-datepicker-calendar td span.p-highlight {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+.p-datepicker-calendar td.p-datepicker-other-month span {
+  color: var(--text-muted) !important;
+}
+
+/* Month/Year picker */
+.p-monthpicker,
+.p-yearpicker {
+  background-color: var(--bg-surface) !important;
+}
+
+.p-monthpicker-month,
+.p-yearpicker-year {
+  color: var(--text-primary) !important;
+  border-radius: 0.375rem !important;
+  transition: all 0.15s ease !important;
+}
+
+.p-monthpicker-month:hover,
+.p-yearpicker-year:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+.p-monthpicker-month.p-highlight,
+.p-yearpicker-year.p-highlight {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+/* Time picker */
+.p-timepicker {
+  background-color: var(--bg-surface) !important;
+  border-top: 1px solid var(--border-default) !important;
+}
+
+.p-timepicker span {
+  color: var(--text-primary) !important;
+}
+
+.p-timepicker button {
+  color: var(--text-secondary) !important;
+}
+
+.p-timepicker button:hover {
+  background-color: var(--hover-bg) !important;
+  color: var(--text-primary) !important;
+}
+
+/* DatePicker input icon */
+.p-datepicker-trigger,
+.p-calendar-trigger {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: var(--text-secondary) !important;
+}
+
+.p-datepicker-trigger:hover,
+.p-calendar-trigger:hover {
+  color: var(--color-primary) !important;
+}
+
+/* PrimeNG Tabs - Theme Integration */
+.p-tabs {
+  background-color: transparent !important;
+}
+
+.p-tablist {
+  background-color: var(--bg-muted) !important;
+  border-bottom: 1px solid var(--border-default) !important;
+}
+
+.p-tab {
+  background-color: transparent !important;
+  color: var(--text-secondary) !important;
+  border: none !important;
+  padding: 0.875rem 1.25rem !important;
+  transition: all 0.15s ease !important;
+}
+
+.p-tab:hover:not(.p-tab-active) {
+  color: var(--text-primary) !important;
+  background-color: var(--hover-bg) !important;
+}
+
+.p-tab.p-tab-active {
+  background-color: var(--bg-surface) !important;
+  color: var(--color-primary) !important;
+  border-bottom: 2px solid var(--color-primary) !important;
+}
+
+.p-tabpanels {
+  background-color: var(--bg-surface) !important;
+}
+
+.p-tabpanel {
+  background-color: var(--bg-surface) !important;
+  padding: 0 !important;
+}
+
+/* SLA Policy Dialog specific tabs */
+.sla-policy-dialog .p-dialog-content {
+  padding: 0 !important;
+}
+
+.sla-tabs .p-tablist {
+  background-color: var(--bg-elevated) !important;
+  padding: 0.5rem 0.5rem 0 0.5rem !important;
+  border-radius: 0.5rem 0.5rem 0 0 !important;
+  border-bottom: none !important;
+}
+
+.sla-tabs .p-tab {
+  border-radius: 0.5rem 0.5rem 0 0 !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.875rem !important;
+  margin-right: 0.25rem !important;
+}
+
+.sla-tabs .p-tab.p-tab-active {
+  background-color: var(--bg-surface) !important;
+  border-bottom: none !important;
+  position: relative !important;
+}
+
+.sla-tabs .p-tabpanels {
+  border: 1px solid var(--border-default) !important;
+  border-top: none !important;
+  border-radius: 0 0 0.5rem 0.5rem !important;
+  max-height: 55vh !important;
+  overflow-y: auto !important;
+}
+
+.sla-tabs .p-tabpanel {
+  padding: 0 1rem !important;
+}
