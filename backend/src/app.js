@@ -16,6 +16,8 @@ const setupRoutes = require('./routes/setup.routes');
 const authRoutes = require('./routes/auth.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const webhookRoutes = require('./routes/webhook.routes');
+const tagRoutes = require('./routes/tag.routes');
+const knowledgeBaseRoutes = require('./routes/knowledge-base.routes');
 const apiResponse = require('./middlewares/api-response');
 const PORT = process.env.PORT || 3000;
 
@@ -74,6 +76,8 @@ app.use('/api/setup', setupRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/tags', tagRoutes);
+app.use('/api/knowledge-base', knowledgeBaseRoutes);
 
 // Create HTTP server and attach Socket.IO
 const server = http.createServer(app);

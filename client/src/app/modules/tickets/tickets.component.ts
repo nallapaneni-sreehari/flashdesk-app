@@ -340,6 +340,32 @@ export class TicketsComponent implements OnInit {
   // Tickets (loaded from service)
   tickets: Ticket[] = [];
 
+  get stats() {
+    const all = this.tickets;
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return {
+      total: all.length,
+      open: all.filter(t => t.status === 'open').length,
+      inProgress: all.filter(t => t.status === 'in-progress').length,
+      unassigned: all.filter(t => !t.assignedAgent).length,
+      urgent: all.filter(t => t.priority === 'urgent' || t.priority === 'high').length,
+      resolvedToday: all.filter(t => t.status === 'resolved' && t.updatedAt >= todayStart).length,
+    };
+  }
+
+  applyStatFilter(filter: string) {
+    this.clearFilters();
+    this.clearAdvancedFilters();
+    this.clearQuickFilter();
+    switch (filter) {
+      case 'open':        this.selectedStatus = 'open'; break;
+      case 'in-progress': this.selectedStatus = 'in-progress'; break;
+      case 'unassigned':  this.advancedFilters.showUnassigned = true; break;
+      case 'urgent':      this.selectedPriority = 'urgent'; break;
+    }
+  }
+
   get filteredTickets(): Ticket[] {
     return this.tickets.filter((ticket) => {
       // Quick filter check first

@@ -92,3 +92,9 @@ services:
         condition: service_healthy
     ports:
       - "2727:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  redisdata:

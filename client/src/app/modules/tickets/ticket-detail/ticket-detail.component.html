@@ -840,6 +840,32 @@
                     </div>
                 </div>
 
+                <!-- Tags -->
+                <div class="mt-4">
+                    <label class="text-xs font-medium text-(--text-secondary)">
+                        Tags
+                        @if (hasTagsChanged()) {
+                            <span class="ml-1 text-amber-600 dark:text-amber-400">*</span>
+                        }
+                    </label>
+                    <div class="mt-2 flex min-h-12 flex-wrap items-center gap-1.5 rounded-md border border-(--border-default) bg-(--bg-base) px-2.5 py-1.5 transition-all focus-within:border-(--color-primary) focus-within:ring-1 focus-within:ring-(--color-primary)">
+                        @for (tag of tagsInputValue; track tag) {
+                            <span class="inline-flex items-center gap-1.5 rounded-md bg-(--bg-elevated) px-2.5 py-2 text-sm font-medium text-(--text-primary)">
+                                {{ tag }}
+                                <i class="pi pi-times-circle cursor-pointer text-sm text-(--text-muted) hover:text-(--text-primary)" (click)="removeTag(tag)"></i>
+                            </span>
+                        }
+                        <input
+                            type="text"
+                            class="min-w-20 flex-1 border-0 bg-transparent py-0.5 text-sm text-(--text-primary) outline-none placeholder:text-(--text-muted)"
+                            placeholder="Add tags..."
+                            (keydown.enter)="addTag($event)"
+                            (keydown.,)="addTag($event)"
+                            (blur)="addTag($event)"
+                        />
+                    </div>
+                </div>
+
                 <p-divider />
 
                 <!-- Customer Info -->
@@ -868,21 +894,6 @@
                     </div>
                 </div>
 
-                <p-divider />
-
-                <!-- Tags -->
-                <h3 class="text-sm font-semibold uppercase tracking-wider text-(--text-muted)">Tags</h3>
-                <div class="mt-4 flex flex-wrap gap-2">
-                    @for (tag of t.tags; track tag) {
-                    <span class="rounded-lg bg-(--bg-elevated) px-3 py-2 text-xs font-medium text-(--text-secondary) items-center">
-                        {{ tag }}
-                    </span>
-                    }
-                    <button
-                        class="rounded-lg border border-dashed border-(--border-default) px-3 py-2 text-xs text-(--text-muted) hover:bg-(--hover-bg) transition-colors">
-                        <i class="pi pi-plus text-xs"></i>
-                    </button>
-                </div>
             </div>
         </div>
     </div>

@@ -9,7 +9,7 @@ import { SelectModule } from 'primeng/select';
 import { EditorModule } from 'primeng/editor';
 import { ChipsModule } from 'primeng/chips';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { MockDataService, KBCategory, KBArticle } from '../../../core/services/mock-data.service';
+import { KnowledgeBaseApiService, KBCategoryDto, KBArticleDto } from '../../../core/services/knowledge-base-api.service';
 
 export interface ArticleFormData {
   title: string;
@@ -38,10 +38,10 @@ export interface ArticleFormData {
   templateUrl: './article-editor-dialog.component.html',
 })
 export class ArticleEditorDialogComponent implements OnChanges {
-  private mockData = inject(MockDataService);
+  private kbApi = inject(KnowledgeBaseApiService);
 
   @Input() visible = false;
-  @Input() article: KBArticle | null = null;
+  @Input() article: KBArticleDto | null = null;
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() save = new EventEmitter<ArticleFormData>();
 
@@ -51,9 +51,9 @@ export class ArticleEditorDialogComponent implements OnChanges {
   content = '';
   categoryId = '';
   tags: string[] = [];
-  status: 'published' | 'draft' = 'draft';
+  status: 'published' | 'draft' = 'published';
 
-  categories: KBCategory[] = [];
+  categories: KBCategoryDto[] = [];
   categoryOptions: { label: string; value: string }[] = [];
 
   statusOptions = [
@@ -74,11 +74,13 @@ export class ArticleEditorDialogComponent implements OnChanges {
   }
 
   ngOnInit() {
-    this.categories = this.mockData.getKBCategories();
-    this.categoryOptions = this.categories.map(c => ({
-      label: c.name,
-      value: c.id,
-    }));
+    this.kbApi.getCategories().subscribe(categories => {
+      this.categories = categories;
+      this.categoryOptions = categories.map(c => ({
+        label: c.name,
+        value: c.id,
+      }));
+    });
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -91,7 +93,7 @@ export class ArticleEditorDialogComponent implements OnChanges {
     }
   }
 
-  populateForm(article: KBArticle) {
+  populateForm(article: KBArticleDto) {
     this.title = article.title;
     this.excerpt = article.excerpt;
     this.content = article.content;
@@ -106,7 +108,7 @@ export class ArticleEditorDialogComponent implements OnChanges {
     this.content = '';
     this.categoryId = this.categories[0]?.id || '';
     this.tags = [];
-    this.status = 'draft';
+    this.status = 'published';
   }
 
   close() {

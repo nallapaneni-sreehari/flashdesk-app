@@ -785,6 +785,39 @@ input[pInputText]:disabled {
   cursor: not-allowed !important;
 }
 
+/* PrimeNG Chips (InputChips) - Theme Integration */
+.p-inputchips-input {
+  background-color: var(--bg-base) !important;
+  border: 1px solid var(--border-default) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.15s ease !important;
+  box-shadow: var(--input-shadow) !important;
+}
+
+.p-inputchips:not(.p-disabled):hover .p-inputchips-input {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--border-default)) !important;
+  background-color: var(--bg-surface) !important;
+}
+
+.p-inputchips:not(.p-disabled).p-focus .p-inputchips-input {
+  border-color: var(--color-primary) !important;
+  background-color: var(--bg-surface) !important;
+  box-shadow: var(--input-focus-shadow) !important;
+}
+
+.p-inputchips .p-inputchips-input-item input {
+  color: var(--text-primary) !important;
+}
+
+.p-inputchips .p-inputchips-input-item input::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.p-inputchips-chip.p-chip {
+  background-color: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+}
+
 /* PrimeNG Input Textarea - Theme Integration */
 .p-inputtextarea,
 textarea[pInputTextarea],

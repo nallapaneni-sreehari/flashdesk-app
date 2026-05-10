@@ -133,6 +133,20 @@ export class CreateTicketDialogComponent implements OnChanges {
     this.submitted = false;
   }
 
+  addTag(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value.replace(',', '').trim();
+    if (value && !this.tags.includes(value)) {
+      this.tags = [...this.tags, value];
+    }
+    input.value = '';
+    event.preventDefault();
+  }
+
+  removeTag(tag: string) {
+    this.tags = this.tags.filter(t => t !== tag);
+  }
+
   close() {
     this.visibleChange.emit(false);
   }

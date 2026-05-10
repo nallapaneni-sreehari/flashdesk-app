@@ -7,7 +7,7 @@ import { AvatarModule } from 'primeng/avatar';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DividerModule } from 'primeng/divider';
 import { ToastService } from '../../../core/services/toast.service';
-import { MockDataService, KBArticle } from '../../../core/services/mock-data.service';
+import { KnowledgeBaseApiService, KBArticleDto } from '../../../core/services/knowledge-base-api.service';
 
 @Component({
   selector: 'app-article-detail',
@@ -23,6 +23,14 @@ import { MockDataService, KBArticle } from '../../../core/services/mock-data.ser
   templateUrl: './article-detail.component.html',
   styles: [`
     :host ::ng-deep .article-content {
+      /* ── Base Typography ── */
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+      }
       h2 {
         font-size: 1.5rem;
         font-weight: 600;
@@ -47,10 +55,32 @@ import { MockDataService, KBArticle } from '../../../core/services/mock-data.ser
         padding-left: 1.5rem;
         color: var(--text-secondary);
       }
+      ol { list-style-type: decimal; }
+      ul { list-style-type: disc; }
       li {
         margin-bottom: 0.5rem;
         line-height: 1.6;
       }
+      strong, b { font-weight: 600; }
+      em, i { font-style: italic; }
+      u { text-decoration: underline; }
+      s, strike { text-decoration: line-through; }
+      a { color: var(--color-primary); text-decoration: underline; }
+      blockquote {
+        border-left: 4px solid var(--border-default);
+        padding: 0.5rem 1rem;
+        margin: 1rem 0;
+        color: var(--text-secondary);
+        background: var(--bg-muted);
+        border-radius: 0 0.5rem 0.5rem 0;
+      }
+      img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+      }
+      /* ── Table ── */
       table {
         width: 100%;
         border-collapse: collapse;
@@ -69,6 +99,7 @@ import { MockDataService, KBArticle } from '../../../core/services/mock-data.ser
       td {
         color: var(--text-secondary);
       }
+      /* ── Code ── */
       pre {
         background: var(--bg-elevated);
         border-radius: 0.5rem;
@@ -77,7 +108,7 @@ import { MockDataService, KBArticle } from '../../../core/services/mock-data.ser
         margin: 1rem 0;
       }
       code {
-        font-family: ui-monospace, monospace;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-size: 0.875rem;
         background: var(--bg-elevated);
         padding: 0.125rem 0.375rem;
@@ -101,6 +132,39 @@ import { MockDataService, KBArticle } from '../../../core/services/mock-data.ser
         background: #fef3c7;
         border-left: 4px solid #f59e0b;
       }
+
+      /* ── Quill CSS Classes ── */
+      /* Alignment */
+      .ql-align-center { text-align: center; }
+      .ql-align-right { text-align: right; }
+      .ql-align-justify { text-align: justify; }
+
+      /* Indentation */
+      .ql-indent-1 { padding-left: 3em; }
+      .ql-indent-2 { padding-left: 6em; }
+      .ql-indent-3 { padding-left: 9em; }
+      .ql-indent-4 { padding-left: 12em; }
+      .ql-indent-5 { padding-left: 15em; }
+      .ql-indent-6 { padding-left: 18em; }
+      .ql-indent-7 { padding-left: 21em; }
+      .ql-indent-8 { padding-left: 24em; }
+
+      /* Font sizes */
+      .ql-size-small { font-size: 0.75em; }
+      .ql-size-large { font-size: 1.5em; }
+      .ql-size-huge { font-size: 2.5em; }
+
+      /* Quill video embeds */
+      .ql-video {
+        display: block;
+        max-width: 100%;
+        margin: 1rem 0;
+      }
+
+      /* Inline styles from Quill — override text color to use theme */
+      span[style] {
+        color: var(--text-secondary) !important;
+      }
     }
   `],
 })
@@ -108,12 +172,12 @@ export class ArticleDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private sanitizer = inject(DomSanitizer);
-  private mockData = inject(MockDataService);
+  private kbApi = inject(KnowledgeBaseApiService);
   private toastService = inject(ToastService);
 
   isLoading = signal(true);
-  article = signal<KBArticle | null>(null);
-  relatedArticles = signal<KBArticle[]>([]);
+  article = signal<KBArticleDto | null>(null);
+  relatedArticles = signal<KBArticleDto[]>([]);
   feedbackGiven = signal<'helpful' | 'not-helpful' | null>(null);
 
   safeContent = computed<SafeHtml>(() => {
@@ -130,23 +194,25 @@ export class ArticleDetailComponent implements OnInit {
     });
   }
 
-  async loadArticle(slug: string) {
+  loadArticle(slug: string) {
     this.isLoading.set(true);
     this.feedbackGiven.set(null);
 
-    // Simulate loading
-    await new Promise(resolve => setTimeout(resolve, 400));
-
-    const article = this.mockData.getKBArticleBySlug(slug);
-    if (article) {
-      this.article.set(article);
-      this.mockData.recordKBArticleView(slug);
-      this.relatedArticles.set(this.mockData.getRelatedKBArticles(slug));
-    } else {
-      this.router.navigate(['/knowledge-base']);
-    }
-
-    this.isLoading.set(false);
+    this.kbApi.getArticleBySlug(slug).subscribe({
+      next: (article) => {
+        this.article.set(article);
+        this.kbApi.recordView(article.id).subscribe();
+        // Related articles: fetch articles from same category
+        this.kbApi.getArticles({ status: 'published', categoryId: article.categoryId }).subscribe(articles => {
+          this.relatedArticles.set(articles.filter(a => a.id !== article.id).slice(0, 4));
+        });
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.router.navigate(['/knowledge-base']);
+        this.isLoading.set(false);
+      },
+    });
   }
 
   goBack() {
@@ -160,15 +226,15 @@ export class ArticleDetailComponent implements OnInit {
     }
   }
 
-  openRelatedArticle(article: KBArticle) {
+  openRelatedArticle(article: KBArticleDto) {
     this.router.navigate(['/knowledge-base', 'article', article.slug]);
   }
 
   giveFeedback(helpful: boolean) {
-    const slug = this.article()?.slug;
-    if (!slug || this.feedbackGiven()) return;
+    const article = this.article();
+    if (!article || this.feedbackGiven()) return;
 
-    this.mockData.recordKBArticleFeedback(slug, helpful);
+    this.kbApi.recordFeedback(article.id, helpful).subscribe();
     this.feedbackGiven.set(helpful ? 'helpful' : 'not-helpful');
     
     if (helpful) {
@@ -188,9 +254,10 @@ export class ArticleDetailComponent implements OnInit {
     window.print();
   }
 
-  formatDate(date: Date | undefined): string {
+  formatDate(date: string | Date | undefined): string {
     if (!date) return '';
-    return date.toLocaleDateString('en-US', { 
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return d.toLocaleDateString('en-US', { 
       month: 'long', 
       day: 'numeric', 
       year: 'numeric' 

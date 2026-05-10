@@ -10,5 +10,13 @@
 			"path": "docs"
 		}
 	],
+"files": [
+    {
+      "path": ".env"
+    },
+    {
+      "path": "docker-compose.yml"
+    }
+  ],
 	"settings": {}
 }

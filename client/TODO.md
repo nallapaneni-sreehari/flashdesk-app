@@ -189,6 +189,14 @@ FlashDesk is a modern SaaS helpdesk/ticketing system built with Angular 18+, Pri
   - SLA reports
   - Export to CSV/PDF
 
+- [ ] **Skill-Based Auto-Assignment**
+  - Define skills per agent (e.g. `billing`, `api`, `login`, `mobile`)
+  - Match ticket tags against agent skill set on ticket creation
+  - Auto-assign to the best-matching available agent (most skill overlap, least open tickets as tiebreaker)
+  - Admin UI to manage agent skills (multi-select tags on agent profile)
+  - Fallback: leave unassigned or round-robin if no skill match found
+  - Show "Auto-assigned via skill match" indicator on ticket detail
+
 - [ ] **Implement Scroll Pagination for Customer/Agent in Ticket Creatation**
   - get first 100 users
   - get others as user scrolls all 100 users, or searches for particular user

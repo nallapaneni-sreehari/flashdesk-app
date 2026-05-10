@@ -6,7 +6,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
-import { MockDataService, KBCategory, KBArticle } from '../../core/services/mock-data.service';
+import { KnowledgeBaseApiService, KBCategoryDto, KBArticleDto } from '../../core/services/knowledge-base-api.service';
 import { ArticleEditorDialogComponent, ArticleFormData } from './article-editor-dialog/article-editor-dialog.component';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -27,7 +27,7 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './knowledge-base.component.html',
 })
 export class KnowledgeBaseComponent implements OnInit {
-  private mockData = inject(MockDataService);
+  private kbApi = inject(KnowledgeBaseApiService);
   private authService = inject(AuthService);
   private router = inject(Router);
   private toast = inject(ToastService);
@@ -36,20 +36,24 @@ export class KnowledgeBaseComponent implements OnInit {
   searchQuery = signal('');
   selectedCategory = signal<string | null>(null);
   showArticleDialog = signal(false);
-  editingArticle = signal<KBArticle | null>(null);
+  editingArticle = signal<KBArticleDto | null>(null);
 
-  categories = signal<KBCategory[]>([]);
-  articles = signal<KBArticle[]>([]);
-  popularArticles = signal<KBArticle[]>([]);
+  categories = signal<KBCategoryDto[]>([]);
+  articles = signal<KBArticleDto[]>([]);
+  popularArticles = signal<KBArticleDto[]>([]);
 
   // Current user and admin check from AuthService
   isAdmin = this.authService.isAdmin;
 
   // Search results
   searchResults = computed(() => {
-    const query = this.searchQuery().trim();
+    const query = this.searchQuery().trim().toLowerCase();
     if (!query) return [];
-    return this.mockData.searchKBArticles(query);
+    return this.articles().filter(a =>
+      a.title.toLowerCase().includes(query) ||
+      a.excerpt.toLowerCase().includes(query) ||
+      a.tags.some(t => t.toLowerCase().includes(query))
+    );
   });
 
   isSearching = computed(() => this.searchQuery().trim().length > 0);
@@ -72,17 +76,21 @@ export class KnowledgeBaseComponent implements OnInit {
     this.loadData();
   }
 
-  async loadData() {
+  loadData() {
     this.isLoading.set(true);
-    
-    // Simulate loading
-    await new Promise(resolve => setTimeout(resolve, 500));
 
-    this.categories.set(this.mockData.getKBCategories());
-    this.articles.set(this.mockData.getKBArticles());
-    this.popularArticles.set(this.mockData.getPopularKBArticles(5));
-    
-    this.isLoading.set(false);
+    this.kbApi.getCategories().subscribe(categories => {
+      this.categories.set(categories);
+    });
+
+    this.kbApi.getArticles({ status: 'published' }).subscribe(articles => {
+      this.articles.set(articles);
+      this.isLoading.set(false);
+    });
+
+    this.kbApi.getPopularArticles(5).subscribe(articles => {
+      this.popularArticles.set(articles);
+    });
   }
 
   selectCategory(slug: string | null) {
@@ -90,7 +98,7 @@ export class KnowledgeBaseComponent implements OnInit {
     this.searchQuery.set('');
   }
 
-  openArticle(article: KBArticle) {
+  openArticle(article: KBArticleDto) {
     this.router.navigate(['/knowledge-base', 'article', article.slug]);
   }
 
@@ -111,16 +119,17 @@ export class KnowledgeBaseComponent implements OnInit {
     return views.toString();
   }
 
-  formatDate(date: Date): string {
+  formatDate(date: string | Date): string {
+    const d = typeof date === 'string' ? new Date(date) : date;
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
+    const diff = now.getTime() - d.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     
     if (days === 0) return 'Today';
     if (days === 1) return 'Yesterday';
     if (days < 7) return `${days} days ago`;
     if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   // Article management methods
@@ -129,7 +138,7 @@ export class KnowledgeBaseComponent implements OnInit {
     this.showArticleDialog.set(true);
   }
 
-  openEditArticleDialog(article: KBArticle) {
+  openEditArticleDialog(article: KBArticleDto) {
     this.editingArticle.set(article);
     this.showArticleDialog.set(true);
   }
@@ -138,17 +147,15 @@ export class KnowledgeBaseComponent implements OnInit {
     const editing = this.editingArticle();
     
     if (editing) {
-      // Update existing article
-      const updated = this.mockData.updateKBArticle(editing.slug, data);
-      if (updated) {
+      this.kbApi.updateArticle(editing.id, data).subscribe(() => {
         this.toast.success('Article Updated', 'The article has been updated successfully.');
         this.loadData();
-      }
+      });
     } else {
-      // Create new article
-      const created = this.mockData.createKBArticle(data);
-      this.toast.success('Article Created', `"${created.title}" has been created successfully.`);
-      this.loadData();
+      this.kbApi.createArticle(data).subscribe(created => {
+        this.toast.success('Article Created', `"${created.title}" has been created successfully.`);
+        this.loadData();
+      });
     }
   }
 }

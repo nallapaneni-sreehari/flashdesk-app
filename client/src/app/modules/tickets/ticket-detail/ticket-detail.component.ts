@@ -139,12 +139,14 @@ export class TicketDetailComponent implements OnInit, OnDestroy, HasUnsavedChang
   pendingAgent = signal<Agent | null | undefined>(undefined);
   pendingFollowers = signal<Agent[] | undefined>(undefined);
   pendingDescription = signal<string | null>(null);
+  tagsInputValue: string[] = [];
   private originalStatus = '';
   private originalPriority = '';
   private originalType = '';
   private originalAgentId: string | undefined = undefined;
   private originalFollowerIds: string[] = [];
   private originalDescription = '';
+  private originalTags: string[] = [];
 
   // Data (loaded from service)
   ticket = signal<Ticket | null>(null);
@@ -501,13 +503,15 @@ export class TicketDetailComponent implements OnInit, OnDestroy, HasUnsavedChang
       ? (this.pendingFollowers() || []).map(f => f.id).sort().join(',')
       : this.originalFollowerIds.sort().join(',');
     const currentDescription = this.pendingDescription() ?? ticket.description;
+    const tagsChanged = this.hasTagsChanged();
     
     return currentStatus !== this.originalStatus ||
            currentPriority !== this.originalPriority ||
            currentType !== this.originalType ||
            currentAgentId !== this.originalAgentId ||
            currentFollowerIds !== this.originalFollowerIds.sort().join(',') ||
-           currentDescription !== this.originalDescription;
+           currentDescription !== this.originalDescription ||
+           tagsChanged;
   }
 
   // Listen for beforeunload to warn about unsaved changes
@@ -593,6 +597,8 @@ export class TicketDetailComponent implements OnInit, OnDestroy, HasUnsavedChang
         this.originalAgentId = ticket.assignedAgent?.id;
         this.originalFollowerIds = (ticket.followers || []).map((f: Agent) => f.id);
         this.originalDescription = ticket.description;
+        this.originalTags = [...(ticket.tags || [])];
+        this.tagsInputValue = [...(ticket.tags || [])];
       },
       error: () => {
         this.toast.error('Error', 'Failed to load ticket details');
@@ -933,6 +939,24 @@ export class TicketDetailComponent implements OnInit, OnDestroy, HasUnsavedChang
     return currentFollowerIds !== this.originalFollowerIds.sort().join(',');
   }
 
+  addTag(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value.replace(',', '').trim();
+    if (value && !this.tagsInputValue.includes(value)) {
+      this.tagsInputValue = [...this.tagsInputValue, value];
+    }
+    input.value = '';
+    event.preventDefault();
+  }
+
+  removeTag(tag: string) {
+    this.tagsInputValue = this.tagsInputValue.filter(t => t !== tag);
+  }
+
+  hasTagsChanged(): boolean {
+    return JSON.stringify([...this.tagsInputValue].sort()) !== JSON.stringify([...this.originalTags].sort());
+  }
+
   updateDescription(description: string) {
     this.pendingDescription.set(description);
   }
@@ -1039,6 +1063,14 @@ export class TicketDetailComponent implements OnInit, OnDestroy, HasUnsavedChang
         to: 'Updated',
       });
     }
+
+    if (this.hasTagsChanged()) {
+      changes.push({
+        field: 'Tags',
+        from: this.originalTags.join(', ') || 'None',
+        to: this.tagsInputValue.join(', ') || 'None',
+      });
+    }
     
     return changes;
   }
@@ -1070,6 +1102,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, HasUnsavedChang
       this.pendingAgent.set(undefined);
       this.pendingFollowers.set(undefined);
       this.pendingDescription.set(null);
+      this.tagsInputValue = [...this.originalTags];
       this.isEditingDescription.set(false);
       this.toast.info('Changes Discarded', 'Your changes have been discarded');
       return;
@@ -1122,6 +1155,11 @@ export class TicketDetailComponent implements OnInit, OnDestroy, HasUnsavedChang
       updateLabels.push('description');
     }
 
+    if (this.hasTagsChanged()) {
+      payload.tags = [...this.tagsInputValue];
+      updateLabels.push('tags');
+    }
+
     const ticketNumber = parseInt(this.ticketId(), 10);
     this.ticketApi.updateTicket(ticketNumber, payload).subscribe({
       next: (data: any) => {
@@ -1139,6 +1177,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, HasUnsavedChang
           this.originalAgentId = t.assignedAgent?.id;
           this.originalFollowerIds = (t.followers || []).map(f => f.id);
           this.originalDescription = t.description;
+          this.originalTags = [...(t.tags || [])];
         }
 
         // Reset pending states
@@ -1148,6 +1187,7 @@ export class TicketDetailComponent implements OnInit, OnDestroy, HasUnsavedChang
         this.pendingAgent.set(undefined);
         this.pendingFollowers.set(undefined);
         this.pendingDescription.set(null);
+        this.tagsInputValue = [...this.originalTags];
         this.isEditingDescription.set(false);
 
         this.loader.hide();

@@ -30,6 +30,97 @@
     </div>
   </div>
 
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <!-- Total -->
+    <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-4 flex flex-col gap-1 cursor-default">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium text-(--text-secondary) uppercase tracking-wide">Total</span>
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-(--bg-elevated)">
+          <i class="pi pi-ticket text-sm text-(--text-secondary)"></i>
+        </span>
+      </div>
+      <span class="text-2xl font-bold text-(--text-primary)">{{ stats.total }}</span>
+      <span class="text-xs text-(--text-muted)">all tickets</span>
+    </div>
+
+    <!-- Open -->
+    <div
+      class="rounded-xl border bg-(--bg-surface) p-4 flex flex-col gap-1 cursor-pointer transition-all hover:shadow-md"
+      [ngClass]="selectedStatus === 'open' ? 'border-blue-500 ring-1 ring-blue-500' : 'border-(--border-default)'"
+      (click)="applyStatFilter('open')"
+    >
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium text-(--text-secondary) uppercase tracking-wide">Open</span>
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50">
+          <i class="pi pi-inbox text-sm text-blue-500"></i>
+        </span>
+      </div>
+      <span class="text-2xl font-bold text-blue-600">{{ stats.open }}</span>
+      <span class="text-xs text-(--text-muted)">need attention</span>
+    </div>
+
+    <!-- In Progress -->
+    <div
+      class="rounded-xl border bg-(--bg-surface) p-4 flex flex-col gap-1 cursor-pointer transition-all hover:shadow-md"
+      [ngClass]="selectedStatus === 'in-progress' ? 'border-yellow-500 ring-1 ring-yellow-500' : 'border-(--border-default)'"
+      (click)="applyStatFilter('in-progress')"
+    >
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium text-(--text-secondary) uppercase tracking-wide">In Progress</span>
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50">
+          <i class="pi pi-spin pi-spinner text-sm text-yellow-500"></i>
+        </span>
+      </div>
+      <span class="text-2xl font-bold text-yellow-600">{{ stats.inProgress }}</span>
+      <span class="text-xs text-(--text-muted)">being worked on</span>
+    </div>
+
+    <!-- Unassigned -->
+    <div
+      class="rounded-xl border bg-(--bg-surface) p-4 flex flex-col gap-1 cursor-pointer transition-all hover:shadow-md"
+      [ngClass]="advancedFilters.showUnassigned ? 'border-orange-500 ring-1 ring-orange-500' : 'border-(--border-default)'"
+      (click)="applyStatFilter('unassigned')"
+    >
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium text-(--text-secondary) uppercase tracking-wide">Unassigned</span>
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50">
+          <i class="pi pi-user-minus text-sm text-orange-500"></i>
+        </span>
+      </div>
+      <span class="text-2xl font-bold text-orange-500">{{ stats.unassigned }}</span>
+      <span class="text-xs text-(--text-muted)">no agent</span>
+    </div>
+
+    <!-- Urgent / High -->
+    <div
+      class="rounded-xl border bg-(--bg-surface) p-4 flex flex-col gap-1 cursor-pointer transition-all hover:shadow-md"
+      [ngClass]="selectedPriority === 'urgent' ? 'border-red-500 ring-1 ring-red-500' : 'border-(--border-default)'"
+      (click)="applyStatFilter('urgent')"
+    >
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium text-(--text-secondary) uppercase tracking-wide">High Priority</span>
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-red-50">
+          <i class="pi pi-angle-double-up text-sm text-red-500"></i>
+        </span>
+      </div>
+      <span class="text-2xl font-bold text-red-600">{{ stats.urgent }}</span>
+      <span class="text-xs text-(--text-muted)">urgent &amp; high</span>
+    </div>
+
+    <!-- Resolved Today -->
+    <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-4 flex flex-col gap-1 cursor-default">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium text-(--text-secondary) uppercase tracking-wide">Resolved Today</span>
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-green-50">
+          <i class="pi pi-check-circle text-sm text-green-500"></i>
+        </span>
+      </div>
+      <span class="text-2xl font-bold text-green-600">{{ stats.resolvedToday }}</span>
+      <span class="text-xs text-(--text-muted)">closed today</span>
+    </div>
+  </div>
+
   <!-- Filters -->
   <div class="rounded-xl border border-(--border-default) bg-(--bg-surface) p-4">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -348,25 +439,37 @@
               <!-- Display Mode -->
               @if (ticket.assignedAgent) {
                 <div 
-                  class="flex items-center gap-2 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors hover:bg-(--hover-bg)"
+                  class="flex items-center gap-2"
                   pTooltip="Double-click to reassign"
                   tooltipPosition="top"
                 >
-                  <p-avatar
-                    [image]="ticket.assignedAgent.avatar"
-                    shape="circle"
-                    size="normal"
-                  />
+                  @if (ticket.assignedAgent.avatar) {
+                    <p-avatar
+                      [image]="ticket.assignedAgent.avatar"
+                      shape="circle"
+                      [style]="{ width: '1.75rem', height: '1.75rem' }"
+                    />
+                  } @else {
+                    <p-avatar
+                      [label]="ticket.assignedAgent.name?.charAt(0)"
+                      shape="circle"
+                      [style]="{ width: '1.75rem', height: '1.75rem', 'font-size': '0.75rem', 'background-color': 'var(--color-tertiary)', 'color': 'var(--color-primary)' }"
+                    />
+                  }
                   <span class="text-sm text-(--text-primary)">{{ ticket.assignedAgent.name }}</span>
                 </div>
               } @else {
                 <div 
-                  class="flex items-center gap-2 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors hover:bg-(--hover-bg)"
+                  class="flex items-center gap-2"
                   pTooltip="Double-click to assign"
                   tooltipPosition="top"
                 >
+                  <p-avatar
+                    icon="pi pi-user"
+                    shape="circle"
+                    [style]="{ width: '1.75rem', height: '1.75rem', 'font-size': '0.75rem', 'background-color': 'var(--bg-elevated)', 'color': 'var(--text-muted)' }"
+                  />
                   <span class="text-sm text-(--text-muted) italic">Unassigned</span>
-                  <i class="pi pi-user-plus text-xs text-(--text-muted)"></i>
                 </div>
               }
             }
